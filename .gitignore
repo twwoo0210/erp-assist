@@ -1,0 +1,51 @@
+﻿# Node
+node_modules/
+dist/
+build/
+out/
+.cache/
+.parcel-cache/
+coverage/
+.npm
+.eslintcache
+.stylelintcache
+.yarn/*
+.pnpm-store/
+.pnp.*
+.yarnrc.yml
+
+# Vite
+.vite
+vite.config.ts.timestamp-*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Frameworks
+.next/
+.nuxt/
+
+# Misc
+*.tsbuildinfo
+.sass-cache
+.tmp
+.turbo
+.vercel
