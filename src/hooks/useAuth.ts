@@ -1,7 +1,10 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '../utils/supabase';
+import type { User, Session } from '@supabase/supabase-js';
+import {
+  supabase,
+  ensureSupabaseClient,
+  missingSupabaseMessage,
+} from '../utils/supabase';
 
 interface Profile {
   id: string;
@@ -46,6 +49,10 @@ export const useAuth = () => {
   return context;
 };
 
+const throwSupabaseUnavailable = async () => {
+  throw new Error(missingSupabaseMessage);
+};
+
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -53,10 +60,13 @@ export const useAuthProvider = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 프로필 및 조직 정보 로드
+  // 프로필 / 조직 정보 로드
   const loadUserData = async (userId: string) => {
+    if (!supabase) {
+      return;
+    }
+
     try {
-      // 프로필 정보 조회
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -70,7 +80,6 @@ export const useAuthProvider = () => {
 
       setProfile(profileData);
 
-      // 조직 정보 조회
       if (profileData?.org_id) {
         const { data: orgData, error: orgError } = await supabase
           .from('organizations')
@@ -88,7 +97,11 @@ export const useAuthProvider = () => {
   };
 
   useEffect(() => {
-    // 초기 세션 확인
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -100,14 +113,13 @@ export const useAuthProvider = () => {
       setLoading(false);
     });
 
-    // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (_event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
         
-        if (session?.user) {
-          await loadUserData(session.user.id);
+        if (newSession?.user) {
+          await loadUserData(newSession.user.id);
         } else {
           setProfile(null);
           setOrganization(null);
@@ -121,12 +133,13 @@ export const useAuthProvider = () => {
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {
-    const { data, error } = await supabase.auth.signUp({
+    const client = ensureSupabaseClient();
+    const { data, error } = await client.auth.signUp({
       email,
       password,
       options: {
-        data: metadata
-      }
+        data: metadata,
+      },
     });
 
     if (error) {
@@ -137,9 +150,10 @@ export const useAuthProvider = () => {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const client = ensureSupabaseClient();
+    const { error } = await client.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) {
@@ -148,19 +162,20 @@ export const useAuthProvider = () => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const client = ensureSupabaseClient();
+    const { error } = await client.auth.signOut();
     if (error) {
       throw new Error(error.message);
     }
     
-    // 상태 초기화
     setProfile(null);
     setOrganization(null);
   };
 
   const resetPassword = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`
+    const client = ensureSupabaseClient();
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
 
     if (error) {
@@ -169,10 +184,25 @@ export const useAuthProvider = () => {
   };
 
   const refreshProfile = async () => {
-    if (user) {
+    if (user && supabase) {
       await loadUserData(user.id);
     }
   };
+
+  if (!supabase) {
+    return {
+      user: null,
+      session: null,
+      profile: null,
+      organization: null,
+      loading,
+      signUp: throwSupabaseUnavailable,
+      signIn: throwSupabaseUnavailable,
+      signOut: throwSupabaseUnavailable,
+      resetPassword: throwSupabaseUnavailable,
+      refreshProfile: async () => void 0,
+    };
+  }
 
   return {
     user,
@@ -184,7 +214,7 @@ export const useAuthProvider = () => {
     signIn,
     signOut,
     resetPassword,
-    refreshProfile
+    refreshProfile,
   };
 };
 
