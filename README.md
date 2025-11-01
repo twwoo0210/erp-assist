@@ -1,15 +1,13 @@
 # ERP Assist
 
-이카운트 ERP와 연동되는 AI 기반 전표 입력 시스템
-
+?�카?�트 ERP?� ?�동?�는 AI 기반 ?�표 ?�력 ?�스??
 ## 기능
 
-- **AI 전표 입력**: 자연어로 전표를 생성하고 이카운트 ERP에 자동 등록
-- **대시보드**: 전표 처리 현황 및 통계 확인
-- **실시간 연동**: Supabase를 통한 이카운트 ERP API 연동
-- **다국어 지원**: 한국어/영어 인터페이스
-
-## 기술 스택
+- **AI ?�표 ?�력**: ?�연?�로 ?�표�??�성?�고 ?�카?�트 ERP???�동 ?�록
+- **?�?�보??*: ?�표 처리 ?�황 �??�계 ?�인
+- **?�시�??�동**: Supabase�??�한 ?�카?�트 ERP API ?�동
+- **?�국??지??*: ?�국???�어 ?�터?�이??
+## 기술 ?�택
 
 - **Frontend**: React 19, TypeScript, Tailwind CSS
 - **Backend**: Supabase Functions (Edge Runtime)
@@ -20,34 +18,30 @@
 
 ## 주요 기능
 
-### 1. AI 전표 입력 (Chat)
-- 자연어로 전표 내용을 입력하면 AI가 자동으로 파싱
-- 거래처, 품목, 수량 정보를 자동 추출
-- 이카운트 ERP API를 통해 전표 자동 생성
+### 1. AI ?�표 ?�력 (Chat)
+- ?�연?�로 ?�표 ?�용???�력?�면 AI가 ?�동?�로 ?�싱
+- 거래�? ?�목, ?�량 ?�보�??�동 추출
+- ?�카?�트 ERP API�??�해 ?�표 ?�동 ?�성
 
-### 2. 대시보드
-- 오늘 처리된 전표 수량
-- 등록된 품목 및 거래처 통계
-- 처리 성공률 모니터링
-- 최근 전표 입력 내역 조회
+### 2. ?�?�보??- ?�늘 처리???�표 ?�량
+- ?�록???�목 �?거래�??�계
+- 처리 ?�공�?모니?�링
+- 최근 ?�표 ?�력 ?�역 조회
 
-### 3. 설정 관리
-- 이카운트 ERP API 설정
-- 사용자 인증 정보 관리
-
+### 3. ?�정 관�?- ?�카?�트 ERP API ?�정
+- ?�용???�증 ?�보 관�?
 ## Supabase Functions
 
-- `ai-parse-order`: AI를 통한 전표 내용 파싱
-- `ecount-create-order`: 이카운트 ERP 전표 생성
-- `ecount-sync`: 이카운트 데이터 동기화
-
-## 설치 및 실행
+- `ai-parse-order`: AI�??�한 ?�표 ?�용 ?�싱
+- `ecount-create-order`: ?�카?�트 ERP ?�표 ?�성
+- `ecount-sync`: ?�카?�트 ?�이???�기??
+## ?�치 �??�행
 
 ```bash
-# 의존성 설치
+# ?�존???�치
 npm install
 
-# 개발 서버 실행
+# 개발 ?�버 ?�행
 npm run dev
 
 # 빌드
@@ -57,36 +51,35 @@ npm run build
 npm run preview
 ```
 
-## 환경 설정
+## ?�경 ?�정
 
-프로젝트 루트에 `.env` 파일을 생성하고 다음 변수를 설정하세요:
+?�로?�트 루트??`.env` ?�일???�성?�고 ?�음 변?��? ?�정?�세??
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_PUBLIC_SUPABASE_URL=your_supabase_url
+VITE_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 VITE_ECOUNT_API_KEY=your_ecount_api_key
 ```
 
-## 프로젝트 구조
+## ?�로?�트 구조
 
 ```
 src/
-├── pages/          # 페이지 컴포넌트
-│   ├── chat/       # AI 전표 입력 페이지
-│   ├── dashboard/  # 대시보드 페이지
-│   ├── home/       # 홈 페이지
-│   └── settings/   # 설정 페이지
-├── router/         # 라우팅 설정
-├── i18n/           # 다국어 지원
-└── components/     # 재사용 컴포넌트
+?��??� pages/          # ?�이지 컴포?�트
+??  ?��??� chat/       # AI ?�표 ?�력 ?�이지
+??  ?��??� dashboard/  # ?�?�보???�이지
+??  ?��??� home/       # ???�이지
+??  ?��??� settings/   # ?�정 ?�이지
+?��??� router/         # ?�우???�정
+?��??� i18n/           # ?�국??지???��??� components/     # ?�사??컴포?�트
 
 supabase/
-└── functions/      # Edge Functions
-    ├── ai-parse-order/
-    ├── ecount-create-order/
-    └── ecount-sync/
+?��??� functions/      # Edge Functions
+    ?��??� ai-parse-order/
+    ?��??� ecount-create-order/
+    ?��??� ecount-sync/
 ```
 
-## 라이선스
+## ?�이?�스
 
-이 프로젝트는 MIT 라이선스 하에 제공됩니다.
+???�로?�트??MIT ?�이?�스 ?�에 ?�공?�니??
