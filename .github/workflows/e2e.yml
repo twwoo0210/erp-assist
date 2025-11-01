@@ -23,7 +23,7 @@ jobs:
       - name: Run smoke tests against GitHub Pages
         env:
           BASE_URL: https://twwoo0210.github.io/erp-assist
-        run: npx -y @playwright/test@latest tests/smoke.spec.ts --reporter=dot
+        run: npx -y @playwright/test@latest test tests/smoke.spec.ts --reporter=dot
 
       - name: Upload Playwright report (if any)
         if: always()
