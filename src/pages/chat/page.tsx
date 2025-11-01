@@ -1,12 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_PUBLIC_SUPABASE_URL,
-  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY
-);
+import { supabase } from '../../utils/supabase';
 
 interface Message {
   id: string;
@@ -46,6 +41,40 @@ export default function ChatPage() {
   const [currentOrder, setCurrentOrder] = useState<ParsedOrder | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // SEO용 동적 메타데이터 설정
+    document.title = 'AI 전표입력 - ERP Assist | 자연어로 간편한 전표 생성';
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', '자연어로 간편하게 전표를 생성하세요. AI가 전화, 카톡, 엑셀 주문 내용을 자동 분석하여 이카운트 ERP 전표로 변환합니다.');
+    }
+
+    // Schema.org JSON-LD 추가
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "AI 전표입력",
+      "description": "자연어로 간편하게 전표를 생성하는 AI 기반 인터페이스",
+      "url": `${window.location.origin}/chat`,
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "ERP Assist",
+        "url": window.location.origin
+      }
+    });
+    document.head.appendChild(script);
+
+    return () => {
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript && existingScript.parentNode) {
+        existingScript.parentNode.removeChild(existingScript);
+      }
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -67,52 +96,116 @@ export default function ChatPage() {
 
   const callAIParseOrder = async (userInput: string) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_PUBLIC_SUPABASE_URL}/functions/v1/ai-parse-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ inputText: userInput }),
+      console.log('AI 파싱 시작:', userInput);
+      
+      const { data, error } = await supabase.functions.invoke('ai-parse-order', {
+        body: { inputText: userInput }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'AI 파싱에 실패했습니다.');
+      console.log('AI 파싱 응답:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'AI 파싱에 실패했습니다.');
       }
 
-      return await response.json();
-    } catch (error) {
+      if (!data) {
+        throw new Error('AI 파싱 결과가 없습니다.');
+      }
+
+      return data;
+    } catch (error: any) {
       console.error('AI Parse Error:', error);
-      throw error;
+      
+      // 네트워크 오류 처리
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('네트워크 연결을 확인해주세요.');
+      }
+      
+      // 타임아웃 오류 처리
+      if (error.name === 'AbortError') {
+        throw new Error('요청 시간이 초과되었습니다. 다시 시도해주세요.');
+      }
+      
+      throw new Error(error.message || 'AI 파싱 중 오류가 발생했습니다.');
     }
   };
 
   const simulateAIProcessing = async (userInput: string) => {
     setIsProcessing(true);
+    let logId = null;
     
     try {
+      // 주문 로그 저장 (시작)
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single();
+
+          if (profile?.organization_id) {
+            const { data: log } = await supabase
+              .from('order_logs')
+              .insert({
+                organization_id: profile.organization_id,
+                user_id: user.id,
+                raw_input_text: userInput,
+                status: 'pending'
+              })
+              .select()
+              .single();
+            
+            logId = log?.id;
+          }
+        }
+      } catch (logError) {
+        console.warn('로그 저장 실패:', logError);
+        // 로그 저장 실패해도 계속 진행
+      }
+
       const parsedOrder = await callAIParseOrder(userInput);
       setCurrentOrder(parsedOrder);
       addMessage('ai', 'AI가 다음과 같이 분석했습니다. 내용을 확인해주세요:', parsedOrder);
+      
+      // 주문 로그 업데이트 (성공)
+      if (logId) {
+        try {
+          await supabase
+            .from('order_logs')
+            .update({
+              parsed_data: parsedOrder,
+              status: 'success'
+            })
+            .eq('id', logId);
+        } catch (logError) {
+          console.warn('로그 업데이트 실패:', logError);
+        }
+      }
     } catch (error: any) {
+      console.error('AI Processing Error:', error);
       addMessage('ai', `오류가 발생했습니다: ${error.message}`);
+      
+      // 주문 로그 업데이트 (실패)
+      if (logId) {
+        try {
+          await supabase
+            .from('order_logs')
+            .update({
+              status: 'failed',
+              error_message: error.message
+            })
+            .eq('id', logId);
+        } catch (logError) {
+          console.warn('로그 업데이트 실패:', logError);
+        }
+      }
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim() || isProcessing) return;
-
-    const userMessage = inputText.trim();
-    setInputText('');
-    
-    addMessage('user', userMessage);
-    addMessage('system', 'AI가 주문 내용을 분석하고 있습니다...');
-    
-    await simulateAIProcessing(userMessage);
   };
 
   const handleConfirmOrder = async () => {
@@ -122,25 +215,55 @@ export default function ChatPage() {
     addMessage('system', '이카운트 ERP에 전표를 생성하고 있습니다...');
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_PUBLIC_SUPABASE_URL}/functions/v1/ecount-create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ orderData: currentOrder }),
+      const { data, error } = await supabase.functions.invoke('ecount-create-order', {
+        body: { orderData: currentOrder }
       });
 
-      const result = await response.json();
+      if (error) {
+        throw new Error(error.message || '전표 생성에 실패했습니다.');
+      }
 
-      if (result.success) {
-        addMessage('ai', `✅ ${result.message}`);
-        setCurrentOrder(null);
-      } else {
-        addMessage('ai', `❌ ${result.error}`);
+      addMessage('ai', `전표가 성공적으로 생성되었습니다! 전표번호: ${data?.orderNo || 'N/A'}`);
+      setCurrentOrder(null);
+      
+      // 주문 로그에 이카운트 응답 저장
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single();
+
+          if (profile?.organization_id) {
+            // 가장 최근 로그 업데이트
+            const { data: recentLog } = await supabase
+              .from('order_logs')
+              .select('id')
+              .eq('organization_id', profile.organization_id)
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+
+            if (recentLog) {
+              await supabase
+                .from('order_logs')
+                .update({
+                  ecount_response: data,
+                  status: 'success'
+                })
+                .eq('id', recentLog.id);
+            }
+          }
+        }
+      } catch (logError) {
+        console.warn('로그 업데이트 실패:', logError);
       }
     } catch (error: any) {
-      addMessage('ai', `❌ 전송 실패: ${error.message}`);
+      console.error('Order Creation Error:', error);
+      addMessage('ai', `전표 생성에 실패했습니다: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -156,10 +279,21 @@ export default function ChatPage() {
     setCurrentOrder(updatedOrder);
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || isProcessing) return;
+    
+    const userMessage = inputText.trim();
+    setInputText('');
+    addMessage('user', userMessage);
+    
+    await simulateAIProcessing(userMessage);
+  };
+
   const renderMessage = (message: Message) => {
     if (message.type === 'user') {
       return (
-        <div className="flex justify-end mb-4">
+        <div key={message.id} className="flex justify-end mb-4">
           <div className="bg-blue-600 text-white rounded-lg px-4 py-2 max-w-xs lg:max-w-md">
             <p>{message.content}</p>
             <p className="text-xs text-blue-100 mt-1">{message.timestamp}</p>
@@ -170,7 +304,7 @@ export default function ChatPage() {
 
     if (message.type === 'system') {
       return (
-        <div className="flex justify-center mb-4">
+        <div key={message.id} className="flex justify-center mb-4">
           <div className="bg-gray-100 text-gray-600 rounded-lg px-4 py-2 text-sm">
             {message.content}
           </div>
@@ -179,7 +313,7 @@ export default function ChatPage() {
     }
 
     return (
-      <div className="flex justify-start mb-4">
+      <div key={message.id} className="flex justify-start mb-4">
         <div className="bg-white border rounded-lg px-4 py-2 max-w-xs lg:max-w-2xl shadow-sm">
           <p className="mb-2">{message.content}</p>
           
@@ -192,7 +326,7 @@ export default function ChatPage() {
               </div>
               
               <div className="space-y-3">
-                {message.data.items.map((item: any, index: number) => (
+                {message.data.items?.map((item: any, index: number) => (
                   <div key={index} className="border border-gray-200 rounded-lg p-3 bg-white">
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-900">
@@ -233,7 +367,7 @@ export default function ChatPage() {
               
               <div className="mt-4 pt-3 border-t border-gray-200">
                 <div className="text-right text-lg font-bold text-gray-900">
-                  총액: ₩{message.data.items.reduce((total: number, item: any) => 
+                  총액: ₩{message.data.items?.reduce((total: number, item: any) => 
                     total + (item.matched_item?.price || 0) * item.qty, 0
                   ).toLocaleString()}
                 </div>
@@ -276,10 +410,15 @@ export default function ChatPage() {
               >
                 <i className="ri-arrow-left-line text-xl"></i>
               </button>
-              <h1 className="text-xl font-semibold text-gray-900">AI 전표 입력</h1>
+              <h1 
+                className="text-xl font-semibold text-gray-900 cursor-pointer"
+                onClick={() => navigate('/')}
+              >
+                AI 전표입력
+              </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">이카운트 연동됨</span>
+              <span className="text-sm text-gray-500">ERP 연동됨</span>
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             </div>
           </div>

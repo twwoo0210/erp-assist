@@ -41,6 +41,31 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    // SEO용 동적 메타데이터 설정
+    document.title = 'ERP Assist 설정 - 이카운트 연동 및 회사 정보 관리';
+    
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', '이카운트 ERP 연동 설정, 회사 정보 관리, 사용자 권한 설정을 한 곳에서 관리하세요. 안전하고 간편한 API 연동을 지원합니다.');
+    }
+
+    // Schema.org JSON-LD 추가
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "ERP Assist 설정",
+      "description": "이카운트 ERP 연동 설정 및 회사 정보 관리",
+      "url": `${import.meta.env.VITE_SITE_URL || 'https://example.com'}/settings`,
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "ERP Assist",
+        "url": `${import.meta.env.VITE_SITE_URL || 'https://example.com'}`
+      }
+    });
+    document.head.appendChild(script);
+
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -96,6 +121,13 @@ export default function SettingsPage() {
     };
     
     checkUser();
+
+    return () => {
+      const existingScript = document.querySelector('script[type="application/ld+json"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
   }, [navigate]);
 
   const handleEcountSubmit = async (e: React.FormEvent) => {
