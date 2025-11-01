@@ -1,4 +1,5 @@
 import { useAuth } from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
 
 export default function DashboardPage() {
   const { user, profile, organization } = useAuth();
@@ -107,8 +108,8 @@ export default function DashboardPage() {
                 빠른 액션
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <a
-                  href="/orders/ai-entry"
+                <Link
+                  to="/orders/ai-entry"
                   className="relative group bg-blue-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-blue-100 transition-colors"
                 >
                   <div>
@@ -124,10 +125,10 @@ export default function DashboardPage() {
                       자연어로 주문을 입력하고 자동으로 처리하세요
                     </p>
                   </div>
-                </a>
+                </Link>
 
-                <a
-                  href="/chat"
+                <Link
+                  to="/chat"
                   className="relative group bg-green-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 rounded-lg hover:bg-green-100 transition-colors"
                 >
                   <div>
@@ -143,10 +144,10 @@ export default function DashboardPage() {
                       AI 어시스턴트와 대화하며 업무를 처리하세요
                     </p>
                   </div>
-                </a>
+                </Link>
 
-                <a
-                  href="/settings/ecount"
+                <Link
+                  to="/settings/ecount"
                   className="relative group bg-purple-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-purple-500 rounded-lg hover:bg-purple-100 transition-colors"
                 >
                   <div>
@@ -162,10 +163,10 @@ export default function DashboardPage() {
                       Ecount 시스템과 연동하여 데이터를 동기화하세요
                     </p>
                   </div>
-                </a>
+                </Link>
 
-                <a
-                  href="/settings/account"
+                <Link
+                  to="/settings/account"
                   className="relative group bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-gray-500 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div>
@@ -181,7 +182,7 @@ export default function DashboardPage() {
                       프로필과 조직 정보를 관리하세요
                     </p>
                   </div>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
