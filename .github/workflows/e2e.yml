@@ -2,11 +2,14 @@ name: E2E (Playwright)
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["Deploy to GitHub Pages"]
+    types:
+      - completed
 
 jobs:
   e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
