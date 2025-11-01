@@ -20,7 +20,10 @@ export default function Navigation() {
       console.error('로그아웃 실패:', error);
       alert('로그아웃 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
-      navigate('/auth/login', { replace: true });
+      const base = (typeof __BASE_PATH__ !== 'undefined' ? __BASE_PATH__ : '/');
+      const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+      const target = `${window.location.origin}${normalizedBase}auth/login?nocache=${Date.now()}`;
+      window.location.replace(target);
     }
   };
 

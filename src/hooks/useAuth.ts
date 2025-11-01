@@ -171,10 +171,35 @@ export const useAuthProvider = () => {
     const client = ensureSupabaseClient();
 
     try {
-      await client.auth.signOut({ scope: 'local' });
+      // Prefer a full/global sign-out to avoid stale sessions across tabs
+      await client.auth.signOut({ scope: 'global' });
     } catch (error: any) {
       console.error('Supabase signOut error:', error);
+      // Fallback: try local scope
+      try {
+        await client.auth.signOut({ scope: 'local' });
+      } catch (inner) {
+        console.warn('Supabase local signOut fallback failed:', inner);
+      }
     } finally {
+      // Hard clear any Supabase tokens from localStorage just in case
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i) ?? '';
+            if (key.startsWith('sb-')) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+          // Optional remembered email is user convenience only
+          window.localStorage.removeItem('rememberedEmail');
+        }
+      } catch (storageErr) {
+        console.warn('LocalStorage cleanup on signOut failed:', storageErr);
+      }
+
       setSession(null);
       setUser(null);
       setProfile(null);
