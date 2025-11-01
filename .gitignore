@@ -60,3 +60,6 @@ temp/
 
 # Supabase
 .supabase/
+# Playwright test results
+playwright-report/
+test-results/
