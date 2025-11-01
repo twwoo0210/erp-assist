@@ -1,4 +1,4 @@
-﻿name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -36,6 +36,8 @@ jobs:
       - name: Build
         env:
           BASE_PATH: /erp-assist/
+          VITE_PUBLIC_SUPABASE_URL: https://vqcbegbihfnlxnalymog.supabase.co
+          VITE_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxY2JlZ2JpaGZubHhuYWx5bW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUxNDkzOTIsImV4cCI6MjA3MDcyNTM5Mn0.tyCAGm8Jy6goZ0cTVboblKDhmFry9JyBJNHN97Wz66o
         run: npm run build
 
       - name: SPA fallback 404
