@@ -169,19 +169,16 @@ export const useAuthProvider = () => {
 
   const signOut = async () => {
     const client = ensureSupabaseClient();
-    setLoading(true);
 
     try {
       await client.auth.signOut({ scope: 'local' });
     } catch (error: any) {
       console.error('Supabase signOut error:', error);
-      throw new Error(error.message ?? '로그아웃 처리 중 오류가 발생했습니다.');
     } finally {
       setSession(null);
       setUser(null);
       setProfile(null);
       setOrganization(null);
-      setLoading(false);
     }
   };
 

@@ -5,6 +5,7 @@ import { AuthContext, useAuthProvider, useAuth } from './hooks/useAuth';
 import Navigation from './components/feature/Navigation';
 import Footer from './components/feature/Footer';
 import { featureFlags } from './config/featureFlags';
+import ChunkErrorBoundary from './components/common/ChunkErrorBoundary';
 
 function LoadingSpinner() {
   return (
@@ -65,9 +66,11 @@ function App() {
   return (
     <AuthContext.Provider value={auth}>
       <BrowserRouter basename={__BASE_PATH__}>
-        <Suspense fallback={<LoadingSpinner />}>
-          <AppRoutes />
-        </Suspense>
+        <ChunkErrorBoundary>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AppRoutes />
+          </Suspense>
+        </ChunkErrorBoundary>
       </BrowserRouter>
     </AuthContext.Provider>
   );
