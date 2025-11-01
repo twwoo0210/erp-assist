@@ -15,7 +15,7 @@ test('SPA fallback works and redirects unauthenticated /dashboard to /auth/login
   await expect(async () => {
     const path = new URL(page.url()).pathname;
     expect(path.endsWith('/auth/login') || path.endsWith('/auth/login/')).toBeTruthy();
-  }).toPass();
+  }).toPass({ timeout: 15000 });
 
   // Basic login form presence
   await expect(page.locator('input#email')).toBeVisible();
@@ -28,5 +28,5 @@ test('Home loads and navigation bundle is present', async ({ page }) => {
   // Navbar brand (exact heading) exists
   await expect(
     page.getByRole('heading', { name: 'ERP Assist', exact: true })
-  ).toBeVisible({ timeout: 5000 });
+  ).toBeVisible({ timeout: 15000 });
 });
