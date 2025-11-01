@@ -1,12 +1,11 @@
-
 import { BrowserRouter, useRoutes, Navigate, useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
 import routes from './router/config';
-import { AuthContext, useAuthProvider } from './hooks/useAuth';
+import { AuthContext, useAuthProvider, useAuth } from './hooks/useAuth';
 import Navigation from './components/feature/Navigation';
 import Footer from './components/feature/Footer';
+import { featureFlags } from './config/featureFlags';
 
-// 로딩 컴포넌트
 function LoadingSpinner() {
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -15,9 +14,8 @@ function LoadingSpinner() {
   );
 }
 
-// 보호된 라우트 컴포넌트
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuthProvider();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -31,23 +29,21 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// 인증이 필요한 경로들
 const protectedPaths = [
   '/dashboard',
-  '/chat',
   '/settings',
   '/settings/account',
   '/settings/ecount',
   '/settings/ecount-setup',
-  '/orders/ai-entry'
+  '/orders/ai-entry',
+  ...(featureFlags.aiChat ? ['/chat'] : []),
 ];
 
-// 라우트 래퍼
 function AppRoutes() {
   const location = useLocation();
   const isProtectedPath = protectedPaths.some(path => location.pathname.startsWith(path));
   const isAuthPath = location.pathname.startsWith('/auth/');
-  
+
   const routing = useRoutes(routes);
 
   if (isProtectedPath) {
@@ -57,9 +53,7 @@ function AppRoutes() {
   return (
     <div className="min-h-screen flex flex-col">
       {!isAuthPath && <Navigation />}
-      <main className="flex-1">
-        {routing}
-      </main>
+      <main className="flex-1">{routing}</main>
       {!isAuthPath && <Footer />}
     </div>
   );

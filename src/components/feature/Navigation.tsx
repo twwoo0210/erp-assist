@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { featureFlags } from '../../config/featureFlags';
 
 export default function Navigation() {
   const { user, signOut, profile } = useAuth();
@@ -99,14 +100,16 @@ export default function Navigation() {
                       <i className="ri-settings-line mr-2"></i>
                       계정 설정
                     </Link>
-                    <Link
-                      to="/settings/ecount"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <i className="ri-link mr-2"></i>
-                      Ecount 연결
-                    </Link>
+                    {featureFlags.ecount && (
+                      <Link
+                        to="/settings/ecount"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <i className="ri-link mr-2"></i>
+                        Ecount 연결
+                      </Link>
+                    )}
                     <hr className="my-1" />
                     <button
                       onClick={handleSignOut}

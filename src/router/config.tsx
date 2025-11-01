@@ -1,6 +1,7 @@
 
 import { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
+import { featureFlags } from '../config/featureFlags';
 
 // Lazy load components
 const HomePage = lazy(() => import('../pages/home/page'));
@@ -14,7 +15,7 @@ const ContactPage = lazy(() => import('../pages/contact/page'));
 const FeaturesPage = lazy(() => import('../pages/features/page'));
 const PricingPage = lazy(() => import('../pages/pricing/page'));
 const ProcessPage = lazy(() => import('../pages/process/page'));
-const DemoPage = lazy(() => import('../pages/demo/page'));
+const DemoPage = ComingSoonPage;
 const SettingsPage = lazy(() => import('../pages/settings/page'));
 const AccountSettingsPage = lazy(() => import('../pages/settings/account'));
 const EcountPage = lazy(() => import('../pages/settings/ecount'));
@@ -25,6 +26,7 @@ const DocsPreviewPage = lazy(() => import('../pages/docs-preview/page'));
 const TermsPage = lazy(() => import('../pages/terms/page'));
 const PrivacyPage = lazy(() => import('../pages/privacy/page'));
 const NotFoundPage = lazy(() => import('../pages/NotFound'));
+const ComingSoonPage = lazy(() => import('../pages/coming-soon/page'));
 
 const routes: RouteObject[] = [
   {
@@ -53,7 +55,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/chat',
-    element: <ChatPage />
+    element: featureFlags.aiChat ? <ChatPage /> : <ComingSoonPage />
   },
   {
     path: '/contact',
@@ -85,15 +87,15 @@ const routes: RouteObject[] = [
   },
   {
     path: '/settings/ecount',
-    element: <EcountPage />
+    element: featureFlags.ecount ? <EcountPage /> : <ComingSoonPage />
   },
   {
     path: '/settings/ecount-setup',
-    element: <EcountSetupPage />
+    element: featureFlags.ecount ? <EcountSetupPage /> : <ComingSoonPage />
   },
   {
     path: '/orders/ai-entry',
-    element: <OrdersAiEntryPage />
+    element: featureFlags.ecount ? <OrdersAiEntryPage /> : <ComingSoonPage />
   },
   {
     path: '/order-intake',
@@ -101,7 +103,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/docs-preview',
-    element: <DocsPreviewPage />
+    element: featureFlags.docs ? <DocsPreviewPage /> : <ComingSoonPage />
   },
   {
     path: '/terms',
