@@ -2,9 +2,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../utils/supabase';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function DemoPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showLeadForm, setShowLeadForm] = useState(false);
   const [leadFormData, setLeadFormData] = useState({
     company: '',
@@ -45,6 +47,11 @@ export default function DemoPage() {
   }, []);
 
   const handleStartDemo = () => {
+    if (!user) {
+      navigate('/auth/login', { state: { from: { pathname: '/chat' } } });
+      return;
+    }
+
     navigate('/chat');
   };
 
