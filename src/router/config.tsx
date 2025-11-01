@@ -1,5 +1,4 @@
-
-import { RouteObject } from 'react-router-dom';
+﻿import type { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
 import { featureFlags } from '../config/featureFlags';
 
@@ -15,7 +14,7 @@ const ContactPage = lazy(() => import('../pages/contact/page'));
 const FeaturesPage = lazy(() => import('../pages/features/page'));
 const PricingPage = lazy(() => import('../pages/pricing/page'));
 const ProcessPage = lazy(() => import('../pages/process/page'));
-const DemoPage = ComingSoonPage;
+const DemoPage = lazy(() => import('../pages/demo/page'));
 const SettingsPage = lazy(() => import('../pages/settings/page'));
 const AccountSettingsPage = lazy(() => import('../pages/settings/account'));
 const EcountPage = lazy(() => import('../pages/settings/ecount'));
@@ -75,7 +74,7 @@ const routes: RouteObject[] = [
   },
   {
     path: '/demo',
-    element: <DemoPage />
+    element: featureFlags.aiChat ? <DemoPage /> : <ComingSoonPage />
   },
   {
     path: '/settings',
