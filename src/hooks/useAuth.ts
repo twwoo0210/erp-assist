@@ -102,16 +102,22 @@ export const useAuthProvider = () => {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        loadUserData(session.user.id);
-      }
-      
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          loadUserData(session.user.id);
+        }
+      })
+      .catch((error) => {
+        console.error('세션 정보를 불러오지 못했습니다:', error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
@@ -168,6 +174,8 @@ export const useAuthProvider = () => {
       throw new Error(error.message);
     }
     
+    setSession(null);
+    setUser(null);
     setProfile(null);
     setOrganization(null);
   };

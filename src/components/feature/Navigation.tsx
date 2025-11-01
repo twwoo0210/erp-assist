@@ -11,11 +11,15 @@ export default function Navigation() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
+    setIsUserMenuOpen(false);
+    setIsMenuOpen(false);
+
     try {
       await signOut();
-      navigate('/');
+      navigate('/auth/login', { replace: true });
     } catch (error) {
       console.error('로그아웃 실패:', error);
+      alert('로그아웃 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 
