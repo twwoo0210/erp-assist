@@ -184,8 +184,12 @@ export const useAuthProvider = () => {
 
   const resetPassword = async (email: string) => {
     const client = ensureSupabaseClient();
+    // Ensure GitHub Pages subpath (/erp-assist) is respected on redirect
+    const base = (typeof __BASE_PATH__ !== 'undefined' ? __BASE_PATH__ : '/');
+    const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+    const redirectTo = `${window.location.origin}${normalizedBase}auth/reset-password`;
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
+      redirectTo,
     });
 
     if (error) {
