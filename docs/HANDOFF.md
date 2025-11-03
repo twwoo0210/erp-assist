@@ -5,52 +5,48 @@
 - Live: https://twwoo0210.github.io/erp-assist
 - GitHub: https://github.com/twwoo0210/erp-assist
 
-## 현재 상태
+## ?�재 ?�태
 
-- 앱 하드닝: 로그아웃 시 세션/프로필/조직 초기화 후 `/auth/login` 리다이렉트
-- 비인증 체험 진입: 데모에서 비로그인 시 로그인 페이지로 유도
-- 청크 에러 처리: 청크 로드 실패 시 새로고침 유도(캐시 무력화 쿼리 포함)
-- 라우팅: `BrowserRouter`에 `__BASE_PATH__` 적용, Vite `BASE_PATH`로 주입
-- Pages 배포: `dist`→`out` 이동, `out/404.html` 생성(SPA 폴백)
-- E2E(Playwright): 라이브 페이지 대상으로 스모크 2케이스(홈 렌더, /dashboard → /auth/login)
+- ???�드?? 로그?�웃 ???�션/?�로??조직 초기????`/auth/login` 리다?�렉??- 비인�?체험 진입: ?�모?�서 비로그인 ??로그???�이지�??�도
+- �?�� ?�러 처리: �?�� 로드 ?�패 ???�로고침 ?�도(캐시 무력??쿼리 ?�함)
+- ?�우?? `BrowserRouter`??`__BASE_PATH__` ?�용, Vite `BASE_PATH`�?주입
+- Pages 배포: `dist`??out` ?�동, `out/404.html` ?�성(SPA ?�백)
+- E2E(Playwright): ?�이�??�이지 ?�?�으�??�모??2케?�스(???�더, /dashboard ??/auth/login)
 
-## 남은 이슈 요약
+## ?��? ?�슈 ?�약
 
-- 브라우저 캐시가 이전 번들을 제공하는 간헐적 현상 → `?nocache=...`로 강제 갱신
-- Supabase Auth 리다이렉트 URL 설정이 서브패스(`/erp-assist`) 미반영 시 로그인 스피너/미완료 리다이렉트
-- IDE의 MCP Playwright 서버 실행 명령이 잘못되어(패키지명 오류) "program not found" 발생 가능
+- 브라?��? 캐시가 ?�전 번들???�공?�는 간헐???�상 ??`?nocache=...`�?강제 갱신
+- Supabase Auth 리다?�렉??URL ?�정???�브?�스(`/erp-assist`) 미반????로그???�피??미완�?리다?�렉??- IDE??MCP Playwright ?�버 ?�행 명령???�못?�어(?�키지�??�류) "program not found" 발생 가??
+## ?�요???��? ?�정 (Supabase)
 
-## 필요한 외부 설정 (Supabase)
-
-Supabase Dashboard → Authentication → URL Configuration
+Supabase Dashboard ??Authentication ??URL Configuration
 
 - Site URL: `https://twwoo0210.github.io/erp-assist`
 - Additional Redirect URLs: `https://twwoo0210.github.io/erp-assist`
 - Allow Cross-Origin Auth Origins: `https://twwoo0210.github.io`
 
-설정 반영 후, 새 시크릿 창으로 재검증하세요.
+?�정 반영 ?? ???�크�?창으�??��?증하?�요.
 
-## 검증 시나리오 (캐시 무력화)
+## 검�??�나리오 (캐시 무력??
 
-- 새 프라이빗(시크릿) 창에서 접속:
+- ???�라?�빗(?�크�? 창에???�속:
   - `https://twwoo0210.github.io/erp-assist/?nocache=TIMESTAMP`
   - `https://twwoo0210.github.io/erp-assist/dashboard?nocache=TIMESTAMP`
-- 기대 결과:
-  - 딥링크 정상 부팅(SPA 404 폴백 작동)
-  - 비인증 `/dashboard` 접근 시 `/auth/login`으로 이동
+- 기�? 결과:
+  - ?�링???�상 부??SPA 404 ?�백 ?�동)
+  - 비인�?`/dashboard` ?�근 ??`/auth/login`?�로 ?�동
 
-문제 지속 시, 콘솔/네트워크 로그 공유:
+문제 지???? 콘솔/?�트?�크 로그 공유:
 
 - Console: Supabase/Auth/ChunkLoadError 메시지
-- Network: `/erp-assist/assets/page-*.js` 실패 요청(URL/상태코드)
+- Network: `/erp-assist/assets/page-*.js` ?�패 ?�청(URL/?�태코드)
 
 ## 배포/CI
 
-- 워크플로: `.github/workflows/pages.yml`
-  - `BASE_PATH=/erp-assist/`로 빌드
-  - `dist`→`out` 이동 후 `out/404.html` 생성하여 SPA 폴백 보장
-  - Supabase env 미설정 시 빌드 단계에서 실패하도록 사전 검증
-- 푸시/트리거: `main` 푸시 또는 수동 실행
+- ?�크?�로: `.github/workflows/pages.yml`
+  - `BASE_PATH=/erp-assist/`�?빌드
+  - `dist`??out` ?�동 ??`out/404.html` ?�성?�여 SPA ?�백 보장
+  - Supabase env 미설????빌드 ?�계?�서 ?�패?�도�??�전 검�?- ?�시/?�리�? `main` ?�시 ?�는 ?�동 ?�행
 
 ## 로컬 개발/빌드
 
@@ -60,38 +56,38 @@ BASE_PATH=/erp-assist/ npm run build
 # 결과: dist/
 ```
 
-## E2E (Playwright) 로컬 실행
+## E2E (Playwright) 로컬 ?�행
 
 ```bash
 cd .work/erp-assist
 npx -y @playwright/test@latest install
 npx -y @playwright/test@latest tests/smoke.spec.ts --reporter=dot
-# 기대: "2 passed"
+# 기�?: "2 passed"
 ```
 
-## MCP Playwright 서버 (IDE 통합)
+## MCP Playwright ?�버 (IDE ?�합)
 
-에러: "MCP client for playwright failed to start: program not found" 발생 시, 아래 패키지명으로 실행하세요.
+?�러: "MCP client for playwright failed to start: program not found" 발생 ?? ?�래 ?�키지명으�??�행?�세??
 
-- 올바른 명령: `npx mcp-server-playwright --help`
-- (잘못된 예시) `@modelcontextprotocol/server-playwright` → 존재하지 않음
+- ?�바�?명령: `npx mcp-server-playwright --help`
+- (?�못???�시) `@modelcontextprotocol/server-playwright` ??존재?��? ?�음
 
-권장 실행 형태:
+권장 ?�행 ?�태:
 
 ```bash
-# Windows PowerShell (프로젝트 루트에서)
+# Windows PowerShell (?�로?�트 루트?�서)
 npx mcp-server-playwright --help
 
-# 필요 시 브라우저 설치
+# ?�요 ??브라?��? ?�치
 npx playwright install
 
-# IDE에서 MCP 서버 커맨드 설정 예시
+# IDE?�서 MCP ?�버 커맨???�정 ?�시
 # command: npx
 # args: mcp-server-playwright
-# cwd: C:\Users\twwoo\OneDrive\backup\업무\Code\.work\erp-assist
-# env (옵션): PLAYWRIGHT_BROWSERS_PATH=0
+# cwd: C:\Users\twwoo\OneDrive\backup\?�무\Code\.work\erp-assist
+# env (?�션): PLAYWRIGHT_BROWSERS_PATH=0
 
-# 같은 셸에서 npx 확인
+# 같�? ?�에??npx ?�인
 npx mcp-server-playwright --help
 ```
 
@@ -100,18 +96,56 @@ PATH가 꼬인 경우:
 - Windows PowerShell: ``$env:Path = "$PWD\node_modules\.bin;$env:Path"``
 - WSL: `export PATH="$PWD/node_modules/.bin:$PATH"`
 
-## 운영 체크리스트
+## ?�영 체크리스??
+- [ ] Supabase Auth URL/Origins ?�정 반영
+- [ ] Pages 배포 ?�크?�로 ?�공 ??`Actions` ?�인
+- [ ] ?�크�?창에???�링??리다?�렉???�상 ?�작 ?�인
+- [ ] E2E ?�모??로컬/CI) ?�과
+- [ ] IDE?�서 MCP ?�버(`npx mcp-server-playwright`) ?�상 기동
 
-- [ ] Supabase Auth URL/Origins 설정 반영
-- [ ] Pages 배포 워크플로 성공 → `Actions` 확인
-- [ ] 시크릿 창에서 딥링크/리다이렉트 정상 동작 확인
-- [ ] E2E 스모크(로컬/CI) 통과
-- [ ] IDE에서 MCP 서버(`npx mcp-server-playwright`) 정상 기동
+## 참고 ?�일
 
-## 참고 파일
+- ?? `src/App.tsx`, `src/components/common/ChunkErrorBoundary.tsx`, `src/hooks/useAuth.ts`, `src/components/feature/Navigation.tsx`
+- ?�모: `src/pages/demo/page.tsx`
+- ?�크?�로: `.github/workflows/pages.yml`, `.github/workflows/e2e.yml`
+- ?�스?? `tests/smoke.spec.ts`
 
-- 앱: `src/App.tsx`, `src/components/common/ChunkErrorBoundary.tsx`, `src/hooks/useAuth.ts`, `src/components/feature/Navigation.tsx`
-- 데모: `src/pages/demo/page.tsx`
-- 워크플로: `.github/workflows/pages.yml`, `.github/workflows/e2e.yml`
-- 테스트: `tests/smoke.spec.ts`
 
+
+## Ecount ���� (�ʼ� ����)
+
+1) Supabase Project Secrets (Project �� Settings �� Configuration �� Secrets)
+
+- ECOUNT_COMPANY_CODE = (ȸ�� �ڵ�)
+- ECOUNT_USER_ID = (����� ID)
+- ECOUNT_API_KEY = (API Ű �Ǵ� ��й�ȣ)
+
+2) Edge Functions ���� (����)
+
+- �ʼ� �Լ�: ensure-ecount-connection, ecount-login, ecount-sales-create, ecount-items-search, suggest-items
+- supabase CLI ��� ����:
+
+```
+supabase login                           # �׼��� ��ū �ʿ�
+supabase link --project-ref <PROJECT_REF>
+supabase functions deploy ensure-ecount-connection
+supabase functions deploy ecount-login
+supabase functions deploy ecount-sales-create
+supabase functions deploy ecount-items-search
+supabase functions deploy suggest-items
+```
+
+3) �ּ� ���̺�(�̹� �ִٸ� ����)
+
+- profiles(id, org_id��), organizations(id, name��), ecount_connections(org_id, connection_name, status, company_code, ecount_user_id, masked_api_key_suffix, last_session_id, updated_at), api_logs, ecount_logs, ecount_sessions
+
+4) �� �� ���� ���
+
+- ���� �� Ecount ���� ���������� ���� ���� ���� ��ȸ �� "���� �׽�Ʈ" ����
+- ����Ʈ�� ensure-ecount-connection �Լ��� ȣ���� ������ �߱�/�����ϰ� ���� �������� �����մϴ�.
+
+5) ���� �߻� ��
+
+- Functions �α�: Supabase Studio �� Logs �� Edge Functions
+- DB ��Ű��: SQL Editor�� ���̺�/���� Ȯ��
+- Secrets �� ���� �� ���� ȣ����� �ݿ���
