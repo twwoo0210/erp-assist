@@ -37,16 +37,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      
       - name: Load .env.public (fallback)
+        shell: bash
         run: |
           if [ -f .env.public ]; then
-            set -a
-            . ./.env.public
-            set +a
-            echo "VITE_PUBLIC_SUPABASE_URL=" >> 
-            echo "VITE_PUBLIC_SUPABASE_ANON_KEY=" >> 
-          fi- name: Validate Supabase configuration
+            SUPA_URL=$(sed -n 's/^VITE_PUBLIC_SUPABASE_URL=//p' .env.public)
+            SUPA_ANON=$(sed -n 's/^VITE_PUBLIC_SUPABASE_ANON_KEY=//p' .env.public)
+            if [ -z "$VITE_PUBLIC_SUPABASE_URL" ] && [ -n "$SUPA_URL" ]; then
+              echo "VITE_PUBLIC_SUPABASE_URL=$SUPA_URL" >> $GITHUB_ENV
+            fi
+            if [ -z "$VITE_PUBLIC_SUPABASE_ANON_KEY" ] && [ -n "$SUPA_ANON" ]; then
+              echo "VITE_PUBLIC_SUPABASE_ANON_KEY=$SUPA_ANON" >> $GITHUB_ENV
+            fi
+          fi
+
+      - name: Validate Supabase configuration
         run: |
           if [ -z "$VITE_PUBLIC_SUPABASE_URL" ]; then
             echo "::error::VITE_PUBLIC_SUPABASE_URL is not set. Add it as a repository secret or variable."
