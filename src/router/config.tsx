@@ -8,7 +8,6 @@ const LoginPage = lazy(() => import('../pages/auth/login'));
 const RegisterPage = lazy(() => import('../pages/auth/register'));
 const VerifyEmailPage = lazy(() => import('../pages/auth/verify-email'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/forgot-password'));
-const DashboardPage = lazy(() => import('../pages/dashboard/page'));
 const ChatPage = lazy(() => import('../pages/chat/page'));
 const ContactPage = lazy(() => import('../pages/contact/page'));
 const FeaturesPage = lazy(() => import('../pages/features/page'));
@@ -119,3 +118,5 @@ const routes: RouteObject[] = [
 ];
 
 export default routes;
+
+
