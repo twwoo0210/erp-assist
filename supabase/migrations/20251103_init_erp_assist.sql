@@ -3,6 +3,7 @@
 
 -- Extensions
 create extension if not exists "pgcrypto";
+create extension if not exists "pg_trgm";
 
 -- organizations
 create table if not exists public.organizations (
@@ -253,4 +254,3 @@ do $$ begin
     before update on public.ecount_connections
     for each row execute function public.set_updated_at();
 exception when others then null; end $$;
-
