@@ -1,6 +1,7 @@
 ﻿import type { RouteObject } from 'react-router-dom';
 import { lazy } from 'react';
 import { featureFlags } from '../config/featureFlags';
+import DashboardPage from '../pages/dashboard/page';
 
 // Lazy load components
 const HomePage = lazy(() => import('../pages/home/page'));
