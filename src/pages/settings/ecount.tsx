@@ -1,17 +1,15 @@
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../utils/supabase'
 
 export default function EcountSettingsPage() {
-  const { user, profile, loading } = useAuth()
+  const { user, ecountConnection, testEcountConnection, loading } = useAuth()
   const navigate = useNavigate()
   
-  const [ecountConnection, setEcountConnection] = useState<any | null>(null)
   const [formData, setFormData] = useState({
-    companyCode: '',
-    ecountUserId: ''
+    companyCode: ecountConnection?.company_code || '',
+    ecountUserId: ecountConnection?.ecount_user_id || ''
   })
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<any>(null)
@@ -38,43 +36,14 @@ export default function EcountSettingsPage() {
     setTestResult(null)
 
     try {
-      const token = (await supabase!.auth.getSession()).data.session?.access_token
-      const { data, error: fnError } = await supabase!.functions.invoke('ensure-ecount-connection', {
-        headers: token ? { Authorization: Bearer  } : undefined,
-        body: { companyCode: formData.companyCode, ecountUserId: formData.ecountUserId }
-      })
-      if (fnError) throw fnError
-      setTestResult(data)
+      const result = await testEcountConnection(formData.companyCode, formData.ecountUserId)
+      setTestResult(result)
     } catch (err: any) {
-      setError(err.message || 'Ecount ¿¬°á Å×½ºÆ® Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.')
+      setError(err.message || 'Ecount ?°ê²° ?ŒìŠ¤??ì¤??¤ë¥˜ê°€ ë°œìƒ?ˆìŠµ?ˆë‹¤.')
     } finally {
       setTesting(false)
     }
   }
-
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!profile?.org_id || !supabase) return
-        const { data } = await supabase
-          .from('ecount_connections')
-          .select('*')
-          .eq('org_id', profile.org_id)
-          .eq('connection_name', 'primary')
-          .single()
-        setEcountConnection(data)
-        if (data) {
-          setFormData({
-            companyCode: data.company_code || '',
-            ecountUserId: data.ecount_user_id || ''
-          })
-        }
-      } catch (e) {
-        console.warn('Failed to load ecount connection', e)
-      }
-    })()
-  }, [profile?.org_id])
-}
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -353,8 +322,3 @@ export default function EcountSettingsPage() {
     </div>
   )
 }
-
-
-
-
-
