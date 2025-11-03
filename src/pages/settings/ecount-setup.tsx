@@ -1,4 +1,4 @@
-
+﻿
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../utils/supabase'
@@ -49,7 +49,7 @@ export default function EcountSetupPage() {
           ecountUserId: data.ecount_user_id
         })
         if (data.status === 'connected') {
-          setStep(4) // ?�결 ?�료 ?�계�??�동
+          setStep(4) // ?곌껐 ?꾨즺 ?④퀎濡??대룞
         }
       }
     } catch (err) {
@@ -69,13 +69,13 @@ export default function EcountSetupPage() {
     
     if (step === 1) {
       if (!formData.companyCode.trim()) {
-        setError('?�사코드�??�력?�주?�요.')
+        setError('?뚯궗肄붾뱶瑜??낅젰?댁＜?몄슂.')
         return
       }
       setStep(2)
     } else if (step === 2) {
       if (!formData.ecountUserId.trim()) {
-        setError('Ecount ?�용?�ID�??�력?�주?�요.')
+        setError('Ecount ?ъ슜?륤D瑜??낅젰?댁＜?몄슂.')
         return
       }
       setStep(3)
@@ -96,12 +96,12 @@ export default function EcountSetupPage() {
       })
 
       if (error) {
-        setError(error.message || 'Ecount ?�결 ?�스?�에 ?�패?�습?�다.')
+        setError(error.message || 'Ecount ?곌껐 ?뚯뒪?몄뿉 ?ㅽ뙣?덉뒿?덈떎.')
         return
       }
 
       if (data.success) {
-        setSuccess('Ecount ?�결 ?�스?��? ?�공?�습?�다!')
+        setSuccess('Ecount ?곌껐 ?뚯뒪?멸? ?깃났?덉뒿?덈떎!')
         setConnectionData({
           companyCode: formData.companyCode,
           ecountUserId: formData.ecountUserId,
@@ -110,20 +110,20 @@ export default function EcountSetupPage() {
         })
         setStep(4)
         
-        // ?�결 ?�보 ?�로고침
+        // ?곌껐 ?뺣낫 ?덈줈怨좎묠
         await loadExistingConnection()
       } else {
-        setError(data.message || '?�결 ?�스?�에 ?�패?�습?�다.')
+        setError(data.message || '?곌껐 ?뚯뒪?몄뿉 ?ㅽ뙣?덉뒿?덈떎.')
       }
     } catch (err: any) {
-      setError(err.message || 'Ecount ?�결 ?�스??�??�류가 발생?�습?�다.')
+      setError(err.message || 'Ecount ?곌껐 ?뚯뒪??以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDisconnect = async () => {
-    if (!confirm('Ecount ?�결???�제?�시겠습?�까?')) return
+    if (!confirm('Ecount ?곌껐???댁젣?섏떆寃좎뒿?덇퉴?')) return
 
     setLoading(true)
     setError('')
@@ -135,16 +135,16 @@ export default function EcountSetupPage() {
         .eq('user_id', user?.id)
 
       if (error) {
-        setError('?�결 ?�제 �??�류가 발생?�습?�다.')
+        setError('?곌껐 ?댁젣 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.')
         return
       }
 
       setConnectionData(null)
       setFormData({ companyCode: '', ecountUserId: '' })
       setStep(1)
-      setSuccess('Ecount ?�결???�제?�었?�니??')
+      setSuccess('Ecount ?곌껐???댁젣?섏뿀?듬땲??')
     } catch (err) {
-      setError('?�결 ?�제 �??�류가 발생?�습?�다.')
+      setError('?곌껐 ?댁젣 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.')
     } finally {
       setLoading(false)
     }
@@ -154,13 +154,13 @@ export default function EcountSetupPage() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Ecount ?�결 ?�정</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Ecount ?곌껐 ?ㅼ젙</h1>
           <p className="mt-2 text-gray-600">
-            Ecount ERP ?�스?�과 ?�결?�여 주문 ?�이?��? ?�기?�하?�요
+            Ecount ERP ?쒖뒪?쒓낵 ?곌껐?섏뿬 二쇰Ц ?곗씠?곕? ?숆린?뷀븯?몄슂
           </p>
         </div>
 
-        {/* 진행 ?�계 ?�시 */}
+        {/* 吏꾪뻾 ?④퀎 ?쒖떆 */}
         <div className="mb-8">
           <div className="flex justify-center">
             <div className="flex items-center space-x-4">
@@ -188,10 +188,10 @@ export default function EcountSetupPage() {
           </div>
           
           <div className="mt-2 text-center text-xs text-gray-500">
-            {step === 1 && '?�사코드 ?�력'}
-            {step === 2 && 'Ecount ?�용?�ID ?�력'}
-            {step === 3 && 'API Key ?�인 �??�결 ?�스??}
-            {step === 4 && '?�결 ?�료'}
+            {step === 1 && 'Enter company code'}
+            {step === 2 && 'Enter Ecount User ID'}
+            {step === 3 && 'Check API Key & Test Connection'}
+            {step === 4 && 'Connected'}
           </div>
         </div>
 
@@ -209,16 +209,16 @@ export default function EcountSetupPage() {
               </div>
             )}
 
-            {/* 1?�계: ?�사코드 ?�력 */}
+            {/* 1?④퀎: ?뚯궗肄붾뱶 ?낅젰 */}
             {step === 1 && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  1?�계: ?�사코드 ?�력
+                  1?④퀎: ?뚯궗肄붾뱶 ?낅젰
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="companyCode" className="block text-sm font-medium text-gray-700">
-                      Ecount ?�사코드
+                      Ecount ?뚯궗肄붾뱶
                     </label>
                     <div className="mt-1">
                       <input
@@ -231,23 +231,23 @@ export default function EcountSetupPage() {
                         placeholder="?? 669606"
                       />
                       <p className="mt-1 text-xs text-gray-500">
-                        Ecount 관리자?�게 문의?�여 ?�사코드�??�인?�세??                      </p>
+                        Ecount 愿由ъ옄?먭쾶 臾몄쓽?섏뿬 ?뚯궗肄붾뱶瑜??뺤씤?섏꽭??                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 2?�계: Ecount ?�용?�ID ?�력 */}
+            {/* 2?④퀎: Ecount ?ъ슜?륤D ?낅젰 */}
             {step === 2 && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  2?�계: Ecount ?�용?�ID ?�력
+                  2?④퀎: Ecount ?ъ슜?륤D ?낅젰
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="ecountUserId" className="block text-sm font-medium text-gray-700">
-                      Ecount ?�용?�ID
+                      Ecount ?ъ슜?륤D
                     </label>
                     <div className="mt-1">
                       <input
@@ -260,18 +260,18 @@ export default function EcountSetupPage() {
                         placeholder="?? EUNYUL0331"
                       />
                       <p className="mt-1 text-xs text-gray-500">
-                        Ecount 로그?�에 ?�용?�는 ?�용?�ID�??�력?�세??                      </p>
+                        Ecount 濡쒓렇?몄뿉 ?ъ슜?섎뒗 ?ъ슜?륤D瑜??낅젰?섏꽭??                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 3?�계: API Key ?�인 �??�결 ?�스??*/}
+            {/* 3?④퀎: API Key ?뺤씤 諛??곌껐 ?뚯뒪??*/}
             {step === 3 && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  3?�계: API Key ?�인 �??�결 ?�스??                </h3>
+                  3?④퀎: API Key ?뺤씤 諛??곌껐 ?뚯뒪??                </h3>
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                     <div className="flex">
@@ -280,12 +280,12 @@ export default function EcountSetupPage() {
                       </div>
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-blue-800">
-                          API Key 보안 ?�내
+                          API Key 蹂댁븞 ?덈궡
                         </h4>
                         <div className="mt-2 text-sm text-blue-700">
                           <p>
-                            보안???�해 API Key???�면???�력?��? ?�습?�다.<br />
-                            ?�영?�???�전???�버 ?�경??미리 보�??�습?�다.
+                            蹂댁븞???꾪빐 API Key???붾㈃???낅젰?섏? ?딆뒿?덈떎.<br />
+                            ?댁쁺????덉쟾???쒕쾭 ?섍꼍??誘몃━ 蹂닿??덉뒿?덈떎.
                           </p>
                         </div>
                       </div>
@@ -293,19 +293,19 @@ export default function EcountSetupPage() {
                   </div>
 
                   <div className="bg-gray-50 rounded-md p-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">?�력???�보</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">?낅젰???뺣낫</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">?�사코드:</span>
+                        <span className="text-gray-600">?뚯궗肄붾뱶:</span>
                         <span className="font-mono">{formData.companyCode}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">?�용?�ID:</span>
+                        <span className="text-gray-600">?ъ슜?륤D:</span>
                         <span className="font-mono">{formData.ecountUserId}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">API Key:</span>
-                        <span className="text-gray-500">****6306 (?�버??보�???</span>
+                        <span className="text-gray-500">****6306 (?쒕쾭??蹂닿???</span>
                       </div>
                     </div>
                   </div>
@@ -313,11 +313,11 @@ export default function EcountSetupPage() {
               </div>
             )}
 
-            {/* 4?�계: ?�결 ?�료 */}
+            {/* 4?④퀎: ?곌껐 ?꾨즺 */}
             {step === 4 && connectionData?.status === 'connected' && (
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  4?�계: ?�결 ?�료
+                  4?④퀎: ?곌껐 ?꾨즺
                 </h3>
                 <div className="space-y-4">
                   <div className="bg-green-50 border border-green-200 rounded-md p-4">
@@ -327,12 +327,12 @@ export default function EcountSetupPage() {
                       </div>
                       <div className="ml-3">
                         <h4 className="text-sm font-medium text-green-800">
-                          Ecount ?�결 ?�공!
+                          Ecount ?곌껐 ?깃났!
                         </h4>
                         <div className="mt-2 text-sm text-green-700">
                           <p>
-                            Ecount ERP ?�스?�과 ?�공?�으�??�결?�었?�니??<br />
-                            ?�제 주문 ?�이?��? ?�동?�로 ?�기?�할 ???�습?�다.
+                            Ecount ERP ?쒖뒪?쒓낵 ?깃났?곸쑝濡??곌껐?섏뿀?듬땲??<br />
+                            ?댁젣 二쇰Ц ?곗씠?곕? ?먮룞?쇰줈 ?숆린?뷀븷 ???덉뒿?덈떎.
                           </p>
                         </div>
                       </div>
@@ -340,19 +340,19 @@ export default function EcountSetupPage() {
                   </div>
 
                   <div className="bg-gray-50 rounded-md p-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">?�결 ?�보</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">?곌껐 ?뺣낫</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">?�태:</span>
+                        <span className="text-gray-600">?곹깭:</span>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          ?�결??                        </span>
+                          ?곌껐??                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">?�사코드:</span>
+                        <span className="text-gray-600">?뚯궗肄붾뱶:</span>
                         <span className="font-mono">{connectionData.companyCode}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">?�용?�ID:</span>
+                        <span className="text-gray-600">?ъ슜?륤D:</span>
                         <span className="font-mono">{connectionData.ecountUserId}</span>
                       </div>
                       <div className="flex justify-between">
@@ -368,7 +368,7 @@ export default function EcountSetupPage() {
                       onClick={() => (() => { try { const base = (typeof __BASE_PATH__ !== 'undefined' ? __BASE_PATH__ : '/'); const nb = base.endsWith('/') ? base : base + '/'; window.location.replace(window.location.origin + nb + 'orders/ai-entry'); } catch { window.location.href = ''; } })()}
                       className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
                     >
-                      AI 주문 ?�력 ?�작?�기
+                      AI 二쇰Ц ?낅젰 ?쒖옉?섍린
                     </button>
                     <button
                       type="button"
@@ -376,14 +376,14 @@ export default function EcountSetupPage() {
                       disabled={loading}
                       className="px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 whitespace-nowrap"
                     >
-                      ?�결 ?�제
+                      ?곌껐 ?댁젣
                     </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* 버튼 ?�역 */}
+            {/* 踰꾪듉 ?곸뿭 */}
             {step < 4 && (
               <div className="flex justify-between mt-8">
                 {step > 1 && (
@@ -392,7 +392,7 @@ export default function EcountSetupPage() {
                     onClick={() => setStep(step - 1)}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
                   >
-                    ?�전
+                    ?댁쟾
                   </button>
                 )}
                 
@@ -402,7 +402,7 @@ export default function EcountSetupPage() {
                     onClick={handleNext}
                     className={`px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap ${step === 1 ? 'w-full' : 'ml-auto'}`}
                   >
-                    ?�음
+                    Next
                   </button>
                 ) : (
                   <button
@@ -414,10 +414,10 @@ export default function EcountSetupPage() {
                     {loading ? (
                       <div className="flex items-center">
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        ?�결 ?�스??�?..
+                        Testing connection...
                       </div>
                     ) : (
-                      '?�결 ?�스??
+                        <span>Test Connection</span>
                     )}
                   </button>
                 )}
@@ -426,31 +426,31 @@ export default function EcountSetupPage() {
           </div>
         </div>
 
-        {/* ?��?�?*/}
+        {/* ?꾩?留?*/}
         <div className="mt-8 bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              ?��?�?            </h3>
+              ?꾩?留?            </h3>
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex items-start">
                 <i className="ri-question-line text-blue-500 mr-2 mt-0.5"></i>
                 <div>
-                  <strong>?�사코드�?모르겠어??/strong><br />
-                  Ecount 관리자 ?�는 IT ?�당?�에�?문의?�여 ?�사코드�??�인?�세??
+                  <strong>Don't know your company code?</strong><br />
+                  Ecount 愿由ъ옄 ?먮뒗 IT ?대떦?먯뿉寃?臾몄쓽?섏뿬 ?뚯궗肄붾뱶瑜??뺤씤?섏꽭??
                 </div>
               </div>
               <div className="flex items-start">
                 <i className="ri-question-line text-blue-500 mr-2 mt-0.5"></i>
                 <div>
-                  <strong>?�결 ?�스?��? ?�패?�요</strong><br />
-                  ?�사코드?� ?�용?�ID가 ?�확?��? ?�인?�고, Ecount 계정???�성?�되???�는지 ?�인?�세??
+                  <strong>?곌껐 ?뚯뒪?멸? ?ㅽ뙣?댁슂</strong><br />
+                  ?뚯궗肄붾뱶? ?ъ슜?륤D媛 ?뺥솗?쒖? ?뺤씤?섍퀬, Ecount 怨꾩젙???쒖꽦?붾릺???덈뒗吏 ?뺤씤?섏꽭??
                 </div>
               </div>
               <div className="flex items-start">
                 <i className="ri-shield-check-line text-green-500 mr-2 mt-0.5"></i>
                 <div>
-                  <strong>보안??걱정?�요</strong><br />
-                  모든 API Key???�호?�되???�전???�버???�?�되�? ?�면???�출?��? ?�습?�다.
+                  <strong>蹂댁븞??嫄깆젙?쇱슂</strong><br />
+                  紐⑤뱺 API Key???뷀샇?붾릺???덉쟾???쒕쾭????λ릺硫? ?붾㈃???몄텧?섏? ?딆뒿?덈떎.
                 </div>
               </div>
             </div>

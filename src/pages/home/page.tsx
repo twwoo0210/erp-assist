@@ -331,13 +331,13 @@ export default function HomePage() {
               
               <div className="flex space-x-3">
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/auth/register')}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer whitespace-nowrap"
                 >
                   회원가입하고 연결하기
                 </button>
                 <button
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/auth/login')}
                   className="flex-1 border border-blue-600 text-blue-600 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer whitespace-nowrap"
                 >
                   로그인
@@ -371,7 +371,7 @@ export default function HomePage() {
                   무료 데모 체험
                 </button>
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/auth/register')}
                   className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-50 cursor-pointer whitespace-nowrap transition-colors"
                 >
                   지금 연결(Ecount)
