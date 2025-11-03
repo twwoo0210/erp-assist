@@ -1,23 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <title>Redirecting…</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting…</title>
     <script>
+      // GitHub Pages SPA redirect helper (rafgraph pattern, project subpath aware)
       (function () {
         try {
           var l = window.location;
-          var base = '/erp-assist';
+          var base = '/erp-assist'; // project pages base
           var path = l.pathname.indexOf(base) === 0 ? l.pathname.slice(base.length) : l.pathname;
           var target = base + '/?p=' + encodeURIComponent(path + l.search + l.hash);
           l.replace(l.protocol + '//' + l.host + target);
         } catch (e) {
-          // no-op
+          // swallow
         }
       })();
     </script>
   </head>
   <body>Redirecting…</body>
   </html>
-
