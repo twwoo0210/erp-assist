@@ -1,5 +1,5 @@
-import { BrowserRouter, useRoutes, Navigate, useLocation } from 'react-router-dom';
-import { Suspense } from 'react';
+﻿import { BrowserRouter, useRoutes, Navigate, useLocation } from 'react-router-dom';
+import { Suspense, useEffect, useState } from 'react';
 import routes from './router/config';
 import { AuthContext, useAuthProvider, useAuth } from './hooks/useAuth';
 import Navigation from './components/feature/Navigation';
@@ -8,9 +8,30 @@ import { featureFlags } from './config/featureFlags';
 import ChunkErrorBoundary from './components/common/ChunkErrorBoundary';
 
 function LoadingSpinner() {
+  const [showRetry, setShowRetry] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setShowRetry(true), 8000);
+    return () => clearTimeout(id);
+  }, []);
+
+  const hardRefresh = () => {
+    const url = `${window.location.origin}${window.location.pathname}?nocache=${Date.now()}`;
+    window.location.href = url;
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      {showRetry && (
+        <button
+          type="button"
+          onClick={hardRefresh}
+          className="mt-2 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+        >
+          새로고침
+        </button>
+      )}
     </div>
   );
 }
