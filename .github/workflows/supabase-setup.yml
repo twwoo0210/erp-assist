@@ -1,0 +1,61 @@
+name: Supabase Setup (Secrets + Functions)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SUPABASE_PROJECT_REF: dopojluhmixbfghsgwfn
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+
+      - name: Link project
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN || vars.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Missing SUPABASE_ACCESS_TOKEN (add as Actions secret/variable)"
+            exit 1
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Set Supabase secrets (Ecount + Required)
+        env:
+          ECOUNT_COMPANY_CODE: ${{ secrets.ECOUNT_COMPANY_CODE || vars.ECOUNT_COMPANY_CODE }}
+          ECOUNT_USER_ID: ${{ secrets.ECOUNT_USER_ID || vars.ECOUNT_USER_ID }}
+          ECOUNT_API_KEY: ${{ secrets.ECOUNT_API_KEY || vars.ECOUNT_API_KEY }}
+          SUPABASE_URL: ${{ vars.VITE_PUBLIC_SUPABASE_URL || secrets.VITE_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          missing=false
+          for k in ECOUNT_COMPANY_CODE ECOUNT_USER_ID ECOUNT_API_KEY SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+            v=$(eval echo "\$$k")
+            if [ -z "$v" ]; then echo "::error::$k is missing"; missing=true; fi
+          done
+          if [ "$missing" = true ]; then exit 1; fi
+
+          supabase secrets set \
+            ECOUNT_COMPANY_CODE="$ECOUNT_COMPANY_CODE" \
+            ECOUNT_USER_ID="$ECOUNT_USER_ID" \
+            ECOUNT_API_KEY="$ECOUNT_API_KEY" \
+            SUPABASE_URL="$SUPABASE_URL" \
+            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+      - name: Deploy Edge Functions
+        run: |
+          supabase functions deploy ensure-ecount-connection
+          supabase functions deploy ecount-login
+          supabase functions deploy ecount-sales-create
+          supabase functions deploy ecount-items-search
+          supabase functions deploy suggest-items
+
