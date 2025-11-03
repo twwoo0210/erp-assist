@@ -1,4 +1,4 @@
-﻿name: E2E (Playwright)
+name: E2E (Playwright)
 
 on:
   workflow_dispatch:
@@ -55,3 +55,4 @@ jobs:
         with:
           name: playwright-traces
           path: test-results
+

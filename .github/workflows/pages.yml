@@ -37,10 +37,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Validate Supabase configuration
+      
+      - name: Load .env.public (fallback)
+        run: |
+          if [ -f .env.public ]; then
+            set -a
+            . ./.env.public
+            set +a
+            echo "VITE_PUBLIC_SUPABASE_URL=" >> 
+            echo "VITE_PUBLIC_SUPABASE_ANON_KEY=" >> 
+          fi- name: Validate Supabase configuration
         run: |
           if [ -z "$VITE_PUBLIC_SUPABASE_URL" ]; then
             echo "::error::VITE_PUBLIC_SUPABASE_URL is not set. Add it as a repository secret or variable."
@@ -78,3 +84,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
