@@ -1,8 +1,9 @@
 name: Supabase Setup (Secrets + Functions)
 
 on:
+  push:
+    branches: ['main']
   workflow_dispatch:
-
 permissions:
   contents: read
 
@@ -55,3 +56,4 @@ jobs:
       - name: Apply DB schema (migrations)
         run: |
           supabase db push
+
