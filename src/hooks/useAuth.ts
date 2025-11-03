@@ -168,19 +168,23 @@ export const useAuthProvider = () => {
   };
 
   const signOut = async () => {
-    const client = ensureSupabaseClient();
-
     try {
-      // Prefer a full/global sign-out to avoid stale sessions across tabs
-      await client.auth.signOut({ scope: 'global' });
-    } catch (error: any) {
-      console.error('Supabase signOut error:', error);
-      // Fallback: try local scope
-      try {
-        await client.auth.signOut({ scope: 'local' });
-      } catch (inner) {
-        console.warn('Supabase local signOut fallback failed:', inner);
+      if (supabase) {
+        try {
+          // Prefer a full/global sign-out to avoid stale sessions across tabs
+          await supabase.auth.signOut({ scope: 'global' as any });
+        } catch (error: any) {
+          console.error('Supabase signOut error:', error);
+          // Fallback: try local scope
+          try {
+            await supabase.auth.signOut({ scope: 'local' as any });
+          } catch (inner) {
+            console.warn('Supabase local signOut fallback failed:', inner);
+          }
+        }
       }
+    } catch (e) {
+      console.warn('signOut encountered an error before clearing state:', e);
     } finally {
       // Hard clear any Supabase tokens from localStorage just in case
       try {
