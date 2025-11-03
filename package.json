@@ -38,7 +38,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "create:test-user": "node scripts/create-test-user.mjs"
   },
   "type": "module",
   "version": "0.0.0"

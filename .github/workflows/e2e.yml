@@ -23,6 +23,17 @@ jobs:
       - name: Install Playwright (ephemeral)
         run: npx -y @playwright/test@latest install --with-deps
 
+      - name: (Optional) Create E2E test user in Supabase
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ env.VITE_PUBLIC_SUPABASE_URL }}
+          VITE_PUBLIC_SUPABASE_URL: ${{ env.VITE_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+          TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL || vars.E2E_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD || vars.E2E_TEST_PASSWORD }}
+        run: |
+          node scripts/create-test-user.mjs || true
+
       - name: Run Playwright tests (with trace)
         env:
           BASE_URL: https://twwoo0210.github.io/erp-assist
