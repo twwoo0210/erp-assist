@@ -58,7 +58,10 @@ jobs:
         run: |
           rm -rf out
           mv dist out
-          cp out/index.html out/404.html
+          # If public/404.html was emitted by Vite, keep it; otherwise fall back to index.html
+          if [ ! -f out/404.html ]; then
+            cp out/index.html out/404.html
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
