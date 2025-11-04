@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Redirecting…</title>
     <script>
-      // GitHub Pages SPA redirect helper (rafgraph pattern, project subpath aware)
+      // GitHub Pages SPA redirect helper (rafgraph pattern), aware of project subpath
       (function () {
         try {
           var l = window.location;
-          var base = '/erp-assist'; // project pages base
+          var base = '/erp-assist'; // project pages base (no trailing slash)
           var path = l.pathname.indexOf(base) === 0 ? l.pathname.slice(base.length) : l.pathname;
           var target = base + '/?p=' + encodeURIComponent(path + l.search + l.hash);
           l.replace(l.protocol + '//' + l.host + target);
         } catch (e) {
-          // swallow
+          // ignore
         }
       })();
     </script>
   </head>
   <body>Redirecting…</body>
-  </html>
+</html>
