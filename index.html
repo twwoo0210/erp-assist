@@ -6,15 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ERP Assist</title>
     <script>
-      // SPA routing support
+      // SPA routing support with basename
       (function () {
         try {
           var params = new URLSearchParams(window.location.search);
           var p = params.get('p');
           if (p) {
+            // Ensure path starts with /
             if (p.charAt(0) !== '/') p = '/' + p;
-            if (window.location.pathname !== p) {
-              window.history.replaceState(null, '', p);
+            // Add basename prefix for React Router
+            var base = '%BASE_PATH%';
+            var targetPath = base + p;
+            if (window.location.pathname !== targetPath) {
+              window.history.replaceState(null, '', targetPath);
             }
           }
         } catch (e) {}

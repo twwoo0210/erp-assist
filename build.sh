@@ -7,6 +7,15 @@ rm -rf dist
 echo "Building client..."
 npx vite build
 
+# Replace BASE_PATH in HTML files
+echo "Replacing BASE_PATH in HTML files..."
+if [ -n "$BASE_PATH" ]; then
+  find dist -name "*.html" -type f -exec sed -i "s|%BASE_PATH%|${BASE_PATH}|g" {} \;
+else
+  # Default to / for local development
+  find dist -name "*.html" -type f -exec sed -i "s|%BASE_PATH%|/erp-assist|g" {} \;
+fi
+
 # Build Cloudflare Functions
 echo "Building Cloudflare Functions..."
 npx esbuild functions/[[api]].ts --bundle --format=esm --outfile=dist/_worker.js --platform=neutral --external:hono
