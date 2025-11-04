@@ -60,6 +60,14 @@ temp/
 
 # Supabase
 .supabase/
+
 # Playwright test results
 playwright-report/
 test-results/
+
+# Wrangler
+.wrangler/
+.dev.vars
+
+# PM2
+.pm2/

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../utils/supabase'
+import { api, APIError } from '../../utils/api'
 
 interface OrderItem {
   code: string
@@ -68,12 +69,8 @@ export default function AIOrderEntryPage() {
     setParsedOrder(null)
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-parse-order', {
-        body: { inputText: inputText.trim() }
-      })
-
-      if (error) throw error
-
+      const data = await api.parseOrder(inputText.trim())
+      
       setParsedOrder(data)
       setOrderItems(data.items || [])
     } catch (err: any) {

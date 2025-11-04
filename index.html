@@ -6,17 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ERP Assist</title>
     <script>
-      // If redirected from 404.html with ?p=originalPath, restore it before app boots
+      // SPA routing support
       (function () {
         try {
-          var base = '/erp-assist';
           var params = new URLSearchParams(window.location.search);
           var p = params.get('p');
           if (p) {
             if (p.charAt(0) !== '/') p = '/' + p;
-            var target = base + p;
-            if (window.location.pathname !== target) {
-              window.history.replaceState(null, '', target);
+            if (window.location.pathname !== p) {
+              window.history.replaceState(null, '', p);
             }
           }
         } catch (e) {}

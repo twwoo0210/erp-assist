@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "@hono/node-server": "^1.19.6",
     "@stripe/react-stripe-js": "4.0.2",
     "@supabase/supabase-js": "2.57.4",
     "firebase": "12.0.0",
+    "hono": "^4.10.4",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "lucide-react": "^0.469.0",
@@ -14,7 +16,9 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251014.0",
     "@eslint/js": "^9.30.1",
+    "@hono/vite-cloudflare-pages": "^0.4.2",
     "@playwright/test": "^1.56.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -31,14 +35,20 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "unplugin-auto-import": "^19.3.0",
-    "vite": "^7.0.3"
+    "vite": "^7.0.3",
+    "wrangler": "^4.45.3"
   },
   "name": "react",
   "private": true,
   "scripts": {
-    "build": "vite build",
     "dev": "vite",
-    "preview": "vite preview",
+    "dev:sandbox": "wrangler pages dev dist --ip 0.0.0.0 --port 3000",
+    "build": "./build.sh",
+    "preview": "wrangler pages dev dist",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "deploy:prod": "npm run build && wrangler pages deploy dist --project-name erp-assist",
+    "clean-port": "fuser -k 3000/tcp 2>/dev/null || true",
+    "test": "curl http://localhost:3000",
     "create:test-user": "node scripts/create-test-user.mjs"
   },
   "type": "module",

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../utils/supabase';
+import { api, APIError } from '../../utils/api';
 
 interface Message {
   id: string;
@@ -98,16 +99,9 @@ export default function ChatPage() {
     try {
       console.log('AI 파싱 시작:', userInput);
       
-      const { data, error } = await supabase.functions.invoke('ai-parse-order', {
-        body: { inputText: userInput }
-      });
+      const data = await api.parseOrder(userInput);
 
-      console.log('AI 파싱 응답:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw new Error(error.message || 'AI 파싱에 실패했습니다.');
-      }
+      console.log('AI 파싱 응답:', data);
 
       if (!data) {
         throw new Error('AI 파싱 결과가 없습니다.');
@@ -117,14 +111,8 @@ export default function ChatPage() {
     } catch (error: any) {
       console.error('AI Parse Error:', error);
       
-      // 네트워크 오류 처리
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('네트워크 연결을 확인해주세요.');
-      }
-      
-      // 타임아웃 오류 처리
-      if (error.name === 'AbortError') {
-        throw new Error('요청 시간이 초과되었습니다. 다시 시도해주세요.');
+      if (error instanceof APIError) {
+        throw new Error(error.message);
       }
       
       throw new Error(error.message || 'AI 파싱 중 오류가 발생했습니다.');
@@ -215,15 +203,13 @@ export default function ChatPage() {
     addMessage('system', '이카운트 ERP에 전표를 생성하고 있습니다...');
     
     try {
-      const { data, error } = await supabase.functions.invoke('ecount-create-order', {
-        body: { orderData: currentOrder }
-      });
+      const data = await api.createOrder(currentOrder);
 
-      if (error) {
-        throw new Error(error.message || '전표 생성에 실패했습니다.');
+      if (!data.success) {
+        throw new Error(data.error || '전표 생성에 실패했습니다.');
       }
 
-      addMessage('ai', `전표가 성공적으로 생성되었습니다! 전표번호: ${data?.orderNo || 'N/A'}`);
+      addMessage('ai', `전표가 성공적으로 생성되었습니다! 전표번호: ${data?.document_id || 'N/A'}`);
       setCurrentOrder(null);
       
       // 주문 로그에 이카운트 응답 저장
