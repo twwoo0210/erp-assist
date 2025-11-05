@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -6,23 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ERP Assist</title>
     <script>
-      // SPA routing support with basename
+      // SPA routing support with basename + p/q/h preservation
       (function () {
         try {
-          var params = new URLSearchParams(window.location.search);
-          var p = params.get('p');
-          if (p) {
-            // Ensure path starts with /
-            if (p.charAt(0) !== '/') p = '/' + p;
-            // Add basename prefix for React Router
-            var base = '%BASE_PATH%';
-            var targetPath = base + p;
-            if (window.location.pathname !== targetPath) {
-              window.history.replaceState(null, '', targetPath);
-            }
-          }
-        } catch (e) {}
-      })();
+          var url = new URL(window.location.href);\n          var params = url.searchParams;\n          var p = params.get('p');\n          var q = params.get('q');\n          var h = params.get('h');\n          if (p) {\n            if (p.charAt(0) !== '/') p = '/' + p;\n            var base = '%BASE_PATH%';\n            if (base.endsWith('/')) base = base.slice(0, -1);\n            var targetPath = base + p + (q ? ('?' + q) : '') + (h ? ('#' + h) : '');\n            if (window.location.origin + window.location.pathname + window.location.search + window.location.hash !== window.location.origin + targetPath) {\n              window.history.replaceState(null, '', targetPath);\n            }\n          }\n        })();
     </script>
   </head>
   <body>
@@ -30,3 +17,4 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+
