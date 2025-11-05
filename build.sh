@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Clean dist directory
 rm -rf dist
@@ -7,8 +7,15 @@ rm -rf dist
 echo "Building client..."
 npx vite build
 
-# Replace BASE_PATH in HTML files
-echo "Replacing BASE_PATH in HTML files..."
+
+# Replace BASE_URL placeholder in HTML files
+if [ -n "" ]; then
+  BASE_URL="/"
+else
+  BASE_URL="/erp-assist/"
+fi
+find dist -name "*.html" -type f -exec sed -i "s|%BASE_URL%||g" {} \;
+les..."
 if [ -n "$BASE_PATH" ]; then
   find dist -name "*.html" -type f -exec sed -i "s|%BASE_PATH%|${BASE_PATH}|g" {} \;
 else
@@ -37,3 +44,4 @@ cat > dist/_routes.json << 'EOF'
 EOF
 
 echo "Build complete!"
+

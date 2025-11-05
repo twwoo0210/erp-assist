@@ -1,17 +1,29 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Redirecting…</title>
     <script>
-      // GitHub Pages SPA redirect helper (rafgraph pattern), aware of project subpath
+      // GitHub Pages SPA redirect helper (project subpath + p/q/h preserve)
       (function () {
         try {
           var l = window.location;
-          var base = '/erp-assist'; // project pages base (no trailing slash)
+          var base = '%BASE_PATH%';
+          if (base.endsWith('/')) base = base.slice(0, -1);
+
+          // Already using ?p= pattern -> no-op (lets index.html handle it)
+          if (l.search.indexOf('?p=') !== -1) return;
+
           var path = l.pathname.indexOf(base) === 0 ? l.pathname.slice(base.length) : l.pathname;
-          var target = base + '/?p=' + encodeURIComponent(path + l.search + l.hash);
+          if (path.charAt(0) !== '/') path = '/' + path;
+
+          var search = l.search ? l.search.slice(1) : '';
+          var hash = l.hash ? l.hash.slice(1) : '';
+          var q = search ? ('&q=' + encodeURIComponent(search)) : '';
+          var h = hash ? ('&h=' + encodeURIComponent(hash)) : '';
+
+          var target = base + '/?p=' + encodeURIComponent(path) + q + h;
           l.replace(l.protocol + '//' + l.host + target);
         } catch (e) {
           // ignore
