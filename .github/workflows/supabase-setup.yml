@@ -38,6 +38,8 @@ jobs:
           ECOUNT_API_KEY: ${{ secrets.ECOUNT_API_KEY || vars.ECOUNT_API_KEY }}
           SUPABASE_URL: ${{ vars.VITE_PUBLIC_SUPABASE_URL || secrets.VITE_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || vars.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || vars.GEMINI_MODEL }}
         run: |
           missing=false
           for k in ECOUNT_COMPANY_CODE ECOUNT_USER_ID ECOUNT_API_KEY SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
@@ -52,6 +54,14 @@ jobs:
             ECOUNT_API_KEY="$ECOUNT_API_KEY" \
             SUPABASE_URL="$SUPABASE_URL" \
             SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
+
+          # Optional AI keys
+          if [ -n "$GEMINI_API_KEY" ]; then
+            supabase secrets set GEMINI_API_KEY="$GEMINI_API_KEY"
+          fi
+          if [ -n "$GEMINI_MODEL" ]; then
+            supabase secrets set GEMINI_MODEL="$GEMINI_MODEL"
+          fi
 
       - name: Apply DB schema (migrations)
         run: |

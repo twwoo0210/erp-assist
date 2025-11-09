@@ -70,14 +70,14 @@ function levenshteinDistance(str1: string, str2: string): number {
 // Gemini API 호출 함수
 async function callGeminiAPI(prompt: string): Promise<string> {
   // 제공받은 API 키 사용
-  const geminiApiKey = "AIzaSyBi3yFRcAH-FVXWM4XH3Evc440pSWwlkW0";
+  const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
   
   if (!geminiApiKey) {
     throw new Error("Gemini API 키가 설정되지 않았습니다.");
   }
 
   // 제공받은 모델 ID 사용
-  const modelId = "gemini-flash-lite-latest";
+  const modelId = Deno.env.get('GEMINI_MODEL') ?? "gemini-flash-lite-latest";
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${geminiApiKey}`;
   
   const requestBody = {
