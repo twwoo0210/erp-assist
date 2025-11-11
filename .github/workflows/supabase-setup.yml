@@ -74,7 +74,11 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN || vars.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase db push
+          echo "Skipping DB migrations (requires interactive password)"
+          echo "Apply migrations manually via Supabase Dashboard or use DB password in CI"
+          # supabase db push requires interactive password input
+          # To enable: set SUPABASE_DB_PASSWORD secret and use:
+          # supabase db push --db-url "postgresql://postgres.dopojluhmixbfghsgwfn:$SUPABASE_DB_PASSWORD@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres"
 
       - name: Deploy Supabase Edge Functions
         env:
