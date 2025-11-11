@@ -75,6 +75,7 @@ export const useAuthProvider = () => {
 
       if (profileError) {
         console.error('프로필 로드 오류:', profileError);
+        // 프로필 로드 실패해도 계속 진행 (프로필이 없을 수 있음)
         return;
       }
 
@@ -93,6 +94,7 @@ export const useAuthProvider = () => {
       }
     } catch (error) {
       console.error('사용자 데이터 로드 실패:', error);
+      // 에러가 발생해도 계속 진행
     }
   };
 
@@ -115,15 +117,22 @@ export const useAuthProvider = () => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
-        if (newSession?.user) {
-          await loadUserData(newSession.user.id);
-        } else {
-          setProfile(null);
-          setOrganization(null);
+        try {
+          if (newSession?.user) {
+            await loadUserData(newSession.user.id);
+          } else {
+            setProfile(null);
+            setOrganization(null);
+          }
+        } catch (error) {
+          console.error('사용자 데이터 로드 중 오류:', error);
+          // 에러가 발생해도 계속 진행
+        } finally {
+          // 모든 이벤트 처리 후 loading을 false로 설정 (에러가 발생해도)
+          if (mounted) {
+            setLoading(false);
+          }
         }
-        
-        // 모든 이벤트 처리 후 loading을 false로 설정
-        setLoading(false);
       }
     );
 
