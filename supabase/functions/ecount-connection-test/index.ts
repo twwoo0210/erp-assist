@@ -154,18 +154,39 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in ecount-connection-test:', error)
+    
+    // 에러 타입별 상태 코드 결정
+    let statusCode = 500
+    let errorMessage = 'Internal server error'
+    
+    if (error.message?.includes('파싱 실패') || error.message?.includes('JSON')) {
+      statusCode = 502 // Bad Gateway
+      errorMessage = 'Ecount API 응답을 처리할 수 없습니다.'
+    } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+      statusCode = 503 // Service Unavailable
+      errorMessage = 'Ecount API 서버에 연결할 수 없습니다.'
+    } else if (error.message) {
+      errorMessage = error.message
+    }
     
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: 'Internal server error',
-        message: error.message,
-        trace_id: crypto.randomUUID()
+        error: errorMessage,
+        message: errorMessage,
+        error_code: statusCode,
+        http_status: statusCode,
+        trace_id: crypto.randomUUID(),
+        details: {
+          type: error.name || 'UnknownError',
+          message: error.message,
+          stack: error.stack
+        }
       }),
       { 
-        status: 500, 
+        status: statusCode, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )

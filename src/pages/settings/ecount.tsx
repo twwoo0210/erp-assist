@@ -52,7 +52,36 @@ export default function EcountSettingsPage() {
       })
       
       if (fnError) {
-        throw fnError
+        console.error('Ecount connection test function error:', fnError)
+        console.error('Error structure:', {
+          message: fnError.message,
+          status: fnError.status,
+          name: fnError.name,
+          context: fnError.context,
+          fullError: fnError
+        })
+        
+        // Supabase Edge Function 에러 구조 분석
+        let errorMessage = fnError.message || 'Ecount 연결 테스트 중 오류가 발생했습니다.'
+        let statusCode = fnError.status || fnError.context?.status || null
+        
+        // 에러 메시지에서 상태 코드 추출 시도
+        if (!statusCode && fnError.message) {
+          const statusMatch = fnError.message.match(/status[:\s]+(\d{3})/i) || 
+                             fnError.message.match(/(\d{3})/)
+          if (statusMatch) {
+            statusCode = statusMatch[1]
+          }
+        }
+        
+        // 상태 코드가 있으면 포함한 메시지 생성
+        if (statusCode) {
+          errorMessage = `서버 오류가 발생했습니다 (${statusCode}). ${errorMessage}`
+        } else {
+          errorMessage = `서버 오류가 발생했습니다. ${errorMessage}`
+        }
+        
+        throw { ...fnError, displayMessage: errorMessage, statusCode }
       }
 
       if (data?.success) {
@@ -117,17 +146,25 @@ export default function EcountSettingsPage() {
       console.error('Ecount 연결 테스트 오류:', err)
       console.error('Error details:', {
         message: err.message,
+        displayMessage: err.displayMessage,
         status: err.status,
-        details: err.details
+        statusCode: err.statusCode,
+        details: err.details,
+        context: err.context,
+        fullError: err
       })
       
       // 더 명확한 에러 메시지
-      let errorMessage = 'Ecount 연결 테스트 중 오류가 발생했습니다.'
+      let errorMessage = err.displayMessage || err.message || 'Ecount 연결 테스트 중 오류가 발생했습니다.'
+      
+      // 상태 코드가 이미 포함되어 있지 않으면 추가
+      if (!errorMessage.includes('(') && (err.statusCode || err.status)) {
+        const code = err.statusCode || err.status
+        errorMessage = `서버 오류가 발생했습니다 (${code}). ${err.message || 'Ecount API 연결을 확인해주세요.'}`
+      }
       
       // Supabase Edge Function 에러 처리
-      if (err.status) {
-        errorMessage = `서버 오류가 발생했습니다 (${err.status}). ${err.message || 'Ecount API 연결을 확인해주세요.'}`
-      } else if (err.message?.includes('non-2xx') || err.message?.includes('status code')) {
+      if (!errorMessage.includes('(') && err.message?.includes('non-2xx')) {
         const statusMatch = err.message?.match(/(\d{3})/)
         const statusCode = statusMatch ? statusMatch[1] : err.status || '알 수 없음'
         errorMessage = `서버 오류가 발생했습니다 (${statusCode}). Ecount API 연결을 확인해주세요.`
@@ -135,8 +172,6 @@ export default function EcountSettingsPage() {
         errorMessage = '인증에 실패했습니다. 다시 로그인해주세요.'
       } else if (err.message?.includes('not configured') || err.message?.includes('missing')) {
         errorMessage = 'Ecount API 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.'
-      } else if (err.message) {
-        errorMessage = err.message
       }
       
       setError(errorMessage)
