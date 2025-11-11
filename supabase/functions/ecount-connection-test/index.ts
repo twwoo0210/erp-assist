@@ -65,26 +65,41 @@ serve(async (req) => {
     }
 
     // Ecount 로그인 테스트
+    const loginRequest = {
+      company_code,
+      user_id: ecount_user_id,
+      api_key: apiKey
+    }
+    
+    console.log('Ecount login request:', {
+      company_code,
+      user_id: ecount_user_id,
+      api_key: apiKey ? `${apiKey.substring(0, 4)}...${apiKey.slice(-4)}` : 'MISSING'
+    })
+    
     const loginResponse = await fetch('http://sboapi.ecount.com/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        company_code,
-        user_id: ecount_user_id,
-        api_key: apiKey
-      })
+      body: JSON.stringify(loginRequest)
     })
+
+    console.log('Ecount login response status:', loginResponse.status)
+    console.log('Ecount login response headers:', Object.fromEntries(loginResponse.headers.entries()))
 
     // 응답 본문을 텍스트로 먼저 읽기
     const responseText = await loginResponse.text()
+    console.log('Ecount login response text (first 500 chars):', responseText.substring(0, 500))
+    
     let loginData: any = {}
     
     try {
       loginData = JSON.parse(responseText)
+      console.log('Ecount login parsed data:', JSON.stringify(loginData).substring(0, 500))
     } catch (parseError) {
       console.error('Failed to parse login response:', responseText)
+      console.error('Parse error:', parseError)
       throw new Error(`Ecount API 응답 파싱 실패: ${responseText.substring(0, 200)}`)
     }
     
@@ -123,15 +138,28 @@ serve(async (req) => {
       })
 
     if (!loginResponse.ok || !loginData.session_id) {
-      const errorMessage = loginData.message || loginData.error || loginData.Message || 'Ecount 로그인에 실패했습니다.'
-      const errorCode = loginData.code || loginData.Code || loginResponse.status
+      const errorMessage = loginData.message || loginData.error || loginData.Message || loginData.Error || 'Ecount 로그인에 실패했습니다.'
+      const errorCode = loginData.code || loginData.Code || loginData.ErrorCode || loginResponse.status
+      
+      console.error('Ecount login failed:', {
+        status: loginResponse.status,
+        ok: loginResponse.ok,
+        hasSessionId: !!loginData.session_id,
+        errorMessage,
+        errorCode,
+        fullResponse: loginData
+      })
       
       return new Response(
         JSON.stringify({ 
           success: false,
           error: errorMessage,
           error_code: errorCode,
-          details: loginData,
+          details: {
+            ...loginData,
+            http_status: loginResponse.status,
+            response_text: responseText.substring(0, 1000)
+          },
           trace_id: traceId,
           status: 'error',
           http_status: loginResponse.status
@@ -142,6 +170,8 @@ serve(async (req) => {
         }
       )
     }
+    
+    console.log('Ecount login successful, session_id:', loginData.session_id)
 
     return new Response(
       JSON.stringify({
