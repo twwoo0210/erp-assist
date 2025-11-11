@@ -12,7 +12,6 @@ env:
 
 jobs:
   setup:
-    if: ${{ (secrets.SUPABASE_ACCESS_TOKEN != '' && startsWith(secrets.SUPABASE_ACCESS_TOKEN, 'sbp_')) || (vars.SUPABASE_ACCESS_TOKEN != '' && startsWith(vars.SUPABASE_ACCESS_TOKEN, 'sbp_')) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
