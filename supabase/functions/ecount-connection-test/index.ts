@@ -35,6 +35,13 @@ serve(async (req) => {
       )
     }
 
+    // 사용자의 org_id 가져오기
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('org_id')
+      .eq('id', user.id)
+      .single()
+
     const { company_code, ecount_user_id } = await req.json()
     
     if (!company_code || !ecount_user_id) {
@@ -94,11 +101,15 @@ serve(async (req) => {
       .from('ecount_connections')
       .upsert({
         user_id: user.id,
+        org_id: profile?.org_id || null,
+        connection_name: 'primary',
         company_code,
         ecount_user_id,
         status,
         masked_api_key_suffix: maskedApiKeySuffix,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: profile?.org_id ? 'org_id,connection_name' : 'user_id'
       })
 
     if (!loginResponse.ok) {
