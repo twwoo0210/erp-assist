@@ -67,13 +67,21 @@ export default function AIOrderEntryPage() {
     setProcessing(true)
     setError('')
     setParsedOrder(null)
+    setOrderItems([])
 
     try {
       const data = await api.parseOrder(inputText.trim())
       
+      console.log('Parsed order data:', data)
+      
+      if (!data || !data.customer || !data.items || data.items.length === 0) {
+        throw new Error('AI가 주문을 분석하지 못했습니다. 입력 내용을 확인해주세요.')
+      }
+      
       setParsedOrder(data)
       setOrderItems(data.items || [])
     } catch (err: any) {
+      console.error('Parse order error:', err)
       setError(err.message || 'AI 주문 분석 중 오류가 발생했습니다.')
     } finally {
       setProcessing(false)
@@ -265,7 +273,9 @@ export default function AIOrderEntryPage() {
             <div className="px-6 py-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700">거래처</label>
-                <div className="mt-1 text-lg font-semibold text-gray-900">{parsedOrder.customer}</div>
+                <div className="mt-1 text-lg font-semibold text-gray-900">
+                  {parsedOrder.customer || '미지정'}
+                </div>
               </div>
 
               {/* 품목 목록 */}
@@ -278,7 +288,7 @@ export default function AIOrderEntryPage() {
                         <label className="block text-xs font-medium text-gray-700">품목코드</label>
                         <input
                           type="text"
-                          value={item.code}
+                          value={item.code || ''}
                           onChange={(e) => handleItemChange(index, 'code', e.target.value)}
                           className="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                           placeholder="품목코드"
@@ -288,7 +298,7 @@ export default function AIOrderEntryPage() {
                         <label className="block text-xs font-medium text-gray-700">품목명</label>
                         <input
                           type="text"
-                          value={item.name}
+                          value={item.name || ''}
                           onChange={(e) => handleItemChange(index, 'name', e.target.value)}
                           className="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                           placeholder="품목명"
@@ -298,27 +308,29 @@ export default function AIOrderEntryPage() {
                         <label className="block text-xs font-medium text-gray-700">수량</label>
                         <input
                           type="number"
-                          value={item.quantity}
+                          value={item.quantity || 0}
                           onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
                           className="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                           placeholder="수량"
+                          min="0"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700">단가</label>
                         <input
                           type="number"
-                          value={item.price}
+                          value={item.price || 0}
                           onChange={(e) => handleItemChange(index, 'price', parseFloat(e.target.value) || 0)}
                           className="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                           placeholder="단가"
+                          min="0"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700">단위</label>
                         <input
                           type="text"
-                          value={item.unit}
+                          value={item.unit || ''}
                           onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
                           className="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                           placeholder="단위"
@@ -327,7 +339,7 @@ export default function AIOrderEntryPage() {
                       <div>
                         <label className="block text-xs font-medium text-gray-700">금액</label>
                         <div className="mt-1 text-sm font-medium text-gray-900 py-2">
-                          {(item.quantity * item.price).toLocaleString()}원
+                          {((item.quantity || 0) * (item.price || 0)).toLocaleString()}원
                         </div>
                       </div>
                     </div>
@@ -339,7 +351,7 @@ export default function AIOrderEntryPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-medium text-gray-900">총 주문 금액</span>
                     <span className="text-xl font-bold text-blue-600">
-                      {orderItems.reduce((sum, item) => sum + (item.quantity * item.price), 0).toLocaleString()}원
+                      {orderItems.reduce((sum, item) => sum + ((item.quantity || 0) * (item.price || 0)), 0).toLocaleString()}원
                     </span>
                   </div>
                 </div>
