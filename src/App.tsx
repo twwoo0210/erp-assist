@@ -39,17 +39,9 @@ function LoadingSpinner() {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, session, loading } = useAuth();
   const location = useLocation();
-  const [checkingSession, setCheckingSession] = useState(true);
 
-  // 세션이 있는지 추가 확인
-  useEffect(() => {
-    if (!loading) {
-      // 세션 체크 완료
-      setCheckingSession(false);
-    }
-  }, [loading]);
-
-  if (loading || checkingSession) {
+  // 로딩 중이면 스피너 표시
+  if (loading) {
     return <LoadingSpinner />;
   }
 

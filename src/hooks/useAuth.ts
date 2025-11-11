@@ -131,6 +131,9 @@ export const useAuthProvider = () => {
           setProfile(null);
           setOrganization(null);
         }
+        
+        // loadUserData 완료 후 loading을 false로 설정
+        setLoading(false);
       } catch (error) {
         console.error('세션 로드 중 예외 발생:', error);
         if (mounted) {
@@ -138,9 +141,6 @@ export const useAuthProvider = () => {
           setUser(null);
           setProfile(null);
           setOrganization(null);
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
