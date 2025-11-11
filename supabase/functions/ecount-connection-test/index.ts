@@ -7,11 +7,18 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('=== ecount-connection-test Edge Function Called ===')
+  console.log('Method:', req.method)
+  console.log('URL:', req.url)
+  console.log('Headers:', Object.fromEntries(req.headers.entries()))
+  
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request - returning CORS headers')
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    console.log('Processing request...')
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(

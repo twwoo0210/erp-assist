@@ -40,16 +40,50 @@ export default function EcountSettingsPage() {
     setTestResult(null)
     
     try {
-      const token = (await supabase!.auth.getSession()).data.session?.access_token
+      console.log('=== Ecount Connection Test Start ===')
+      console.log('Form data:', formData)
+      
+      // Supabase 클라이언트 확인
+      if (!supabase) {
+        throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+      }
+      
+      // 세션 확인
+      const sessionResult = await supabase.auth.getSession()
+      console.log('Session check:', {
+        hasSession: !!sessionResult.data.session,
+        hasError: !!sessionResult.error,
+        error: sessionResult.error
+      })
+      
+      const token = sessionResult.data.session?.access_token
+      if (!token) {
+        throw new Error('로그인이 필요합니다. 세션 토큰을 찾을 수 없습니다.')
+      }
+      
+      console.log('Calling Edge Function: ecount-connection-test')
+      console.log('Request body:', {
+        company_code: formData.companyCode.trim(),
+        ecount_user_id: formData.ecountUserId.trim()
+      })
       
       // ecount-connection-test 함수 사용 (입력값을 받아서 테스트)
-      const { data, error: fnError } = await supabase!.functions.invoke('ecount-connection-test', {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      const invokeResult = await supabase.functions.invoke('ecount-connection-test', {
+        headers: { Authorization: `Bearer ${token}` },
         body: { 
           company_code: formData.companyCode.trim(), 
           ecount_user_id: formData.ecountUserId.trim() 
         }
       })
+      
+      console.log('Edge Function invoke result:', {
+        hasData: !!invokeResult.data,
+        hasError: !!invokeResult.error,
+        data: invokeResult.data,
+        error: invokeResult.error
+      })
+      
+      const { data, error: fnError } = invokeResult
       
       if (fnError) {
         console.error('Ecount connection test function error:', fnError)
@@ -183,16 +217,28 @@ export default function EcountSettingsPage() {
         setTestResult(data)
       }
     } catch (err: any) {
-      console.error('Ecount 연결 테스트 오류:', err)
+      console.error('=== Ecount Connection Test Error ===')
+      console.error('Error type:', typeof err)
+      console.error('Error object:', err)
+      console.error('Error message:', err?.message)
+      console.error('Error stack:', err?.stack)
       console.error('Error details:', {
-        message: err.message,
-        displayMessage: err.displayMessage,
-        status: err.status,
-        statusCode: err.statusCode,
-        details: err.details,
-        context: err.context,
+        message: err?.message,
+        displayMessage: err?.displayMessage,
+        status: err?.status,
+        statusCode: err?.statusCode,
+        details: err?.details,
+        context: err?.context,
+        name: err?.name,
         fullError: err
       })
+      
+      // 네트워크 오류인지 확인
+      if (err?.message?.includes('fetch') || err?.message?.includes('network') || err?.name === 'TypeError') {
+        console.error('Network error detected - Edge Function may not be deployed')
+        setError('Edge Function에 연결할 수 없습니다. 함수가 배포되었는지 확인해주세요.')
+        return
+      }
       
       // 더 명확한 에러 메시지
       let errorMessage = err.displayMessage || err.message || 'Ecount 연결 테스트 중 오류가 발생했습니다.'
