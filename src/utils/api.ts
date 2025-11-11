@@ -82,7 +82,7 @@ export const api = {
           name: string
           price: number
           unit?: string
-        }
+        } | null
         confidence?: number
       }>
     }>('ai-parse-order', {
@@ -90,13 +90,26 @@ export const api = {
       body: JSON.stringify({ inputText }),
     })
 
+    // 응답 데이터 검증
+    if (!result) {
+      throw new APIError('AI 응답이 비어있습니다.', 502)
+    }
+
+    if (!result.customer_name) {
+      result.customer_name = '미지정'
+    }
+
+    if (!result.items || !Array.isArray(result.items) || result.items.length === 0) {
+      throw new APIError('주문 품목이 없습니다.', 400)
+    }
+
     // 프론트엔드 형식에 맞게 변환
     return {
       customer: result.customer_name,
       items: result.items.map(item => ({
         code: item.matched_item?.code || '',
-        name: item.item_name,
-        quantity: item.qty,
+        name: item.item_name || '',
+        quantity: item.qty || 0,
         price: item.matched_item?.price || 0,
         unit: item.matched_item?.unit || '개',
         note: item.confidence ? `매칭 신뢰도: ${(item.confidence * 100).toFixed(0)}%` : undefined,
