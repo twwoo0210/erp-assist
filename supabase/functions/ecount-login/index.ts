@@ -30,7 +30,7 @@ async function loginToEcount(companyCode: string, userId: string, apiKey: string
   const loginData = {
     company_code: companyCode,
     user_id: userId,
-    user_pwd: apiKey
+    api_key: apiKey
   }
 
   const response = await fetch('http://sboapi.ecount.com/login', {

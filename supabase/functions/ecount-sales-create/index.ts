@@ -78,23 +78,31 @@ serve(async (req) => {
       throw new Error(`Login failed: ${JSON.stringify(loginData)}`)
     }
 
-    // 판매 전표 데이터 구성
+    // 판매 전표 데이터 구성 (매뉴얼에 따른 올바른 구조)
+    // 같은 전표로 묶기 위해 동일한 UPLOAD_SER_NO 사용
+    const uploadSerNo = '1'
+    const ioDate = new Date().toISOString().split('T')[0].replace(/-/g, '')
+    
     const saleData = {
-      session_id: loginData.session_id,
-      CUST: customer.name || customer,
-      SALE_DT: new Date().toISOString().split('T')[0],
-      REMARK: `AI 주문 처리 - ${traceId}`,
+      SESSION_ID: loginData.session_id,
       SaleList: items.map((item: any, index: number) => ({
-        SEQ: index + 1,
-        PROD_CD: item.code || item.sku,
-        QTY: item.quantity || item.qty || 1,
-        PRICE: item.price || 0,
-        REMARK: item.note || ''
+        BulkDatas: {
+          UPLOAD_SER_NO: uploadSerNo,
+          IO_DATE: ioDate,
+          CUST: typeof customer === 'string' ? '' : (customer.code || ''),
+          CUST_DES: typeof customer === 'string' ? customer : (customer.name || ''),
+          WH_CD: '', // 출하창고코드 (필수이지만 기본값으로 처리)
+          PROD_CD: item.code || '',
+          PROD_DES: item.name || '',
+          QTY: String(item.quantity || item.qty || 1),
+          PRICE: String(item.price || 0),
+          REMARKS: item.note || `AI 주문 처리 - ${traceId}`
+        }
       }))
     }
 
-    // 판매 전표 생성 API 호출
-    const createResponse = await fetch('http://sboapi.ecount.com/sales/create', {
+    // 판매 전표 생성 API 호출 (매뉴얼에 따른 올바른 엔드포인트)
+    const createResponse = await fetch('http://sboapi.ecount.com/sale/upload', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -135,9 +143,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        slip_no: createData.slip_no || createData.SLIP_NO,
+        slip_no: createData.Data?.SlipNos?.[0] || createData.slip_no || createData.SLIP_NO,
         trace_id: traceId,
-        message: '판매 전표가 성공적으로 생성되었습니다.'
+        message: '판매 전표가 성공적으로 생성되었습니다.',
+        details: createData.Data
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

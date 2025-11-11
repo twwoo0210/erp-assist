@@ -78,16 +78,15 @@ serve(async (req) => {
       throw new Error(`Login failed: ${JSON.stringify(loginData)}`)
     }
 
-    // 품목 검색 API 호출
-    const searchResponse = await fetch('http://sboapi.ecount.com/items/search', {
+    // 품목 검색 API 호출 (매뉴얼에 따른 올바른 구조)
+    const searchResponse = await fetch('http://sboapi.ecount.com/item/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        session_id: loginData.session_id,
-        keyword: keyword,
-        limit: 20
+        SESSION_ID: loginData.session_id,
+        PROD_CD: keyword
       })
     })
 
@@ -121,11 +120,12 @@ serve(async (req) => {
       )
     }
 
-    // 품목 데이터 정규화
-    const items = (searchData.items || []).map((item: any) => ({
-      code: item.PROD_CD || item.code,
-      name: item.PROD_NM || item.name,
-      price: item.PRICE || item.price || 0,
+    // 품목 데이터 정규화 (매뉴얼에 따른 응답 구조)
+    const resultData = searchData.Data?.Result || searchData.Result || []
+    const items = (Array.isArray(resultData) ? resultData : [resultData]).map((item: any) => ({
+      code: item.PROD_CD || item.code || '',
+      name: item.PROD_DES || item.PROD_NM || item.name || '',
+      price: parseFloat(item.OUT_PRICE || item.PRICE || item.price || 0),
       unit: item.UNIT || item.unit || 'EA'
     }))
 
