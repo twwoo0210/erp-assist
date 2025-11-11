@@ -67,11 +67,21 @@ export const useAuthProvider = () => {
     }
 
     try {
-      const { data: profileData, error: profileError } = await supabase
+      // 타임아웃 설정 (5초)
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('프로필 로드 타임아웃')), 5000)
+      );
+
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+
+      const { data: profileData, error: profileError } = await Promise.race([
+        profilePromise,
+        timeoutPromise
+      ]) as any;
 
       if (profileError) {
         console.error('프로필 로드 오류:', profileError);
@@ -82,18 +92,23 @@ export const useAuthProvider = () => {
       setProfile(profileData);
 
       if (profileData?.org_id) {
-        const { data: orgData, error: orgError } = await supabase
+        const orgPromise = supabase
           .from('organizations')
           .select('*')
           .eq('id', profileData.org_id)
           .single();
 
+        const { data: orgData, error: orgError } = await Promise.race([
+          orgPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('조직 로드 타임아웃')), 3000))
+        ]) as any;
+
         if (!orgError && orgData) {
           setOrganization(orgData);
         }
       }
-    } catch (error) {
-      console.error('사용자 데이터 로드 실패:', error);
+    } catch (error: any) {
+      console.error('사용자 데이터 로드 실패:', error?.message || error);
       // 에러가 발생해도 계속 진행
     }
   };
