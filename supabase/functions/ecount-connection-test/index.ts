@@ -35,12 +35,22 @@ serve(async (req) => {
       )
     }
 
-    // 사용자의 org_id 가져오기
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('org_id')
-      .eq('id', user.id)
-      .single()
+    // 사용자의 org_id 가져오기 (에러가 발생해도 계속 진행)
+    let profile: any = null
+    try {
+      const { data: profileData, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('org_id')
+        .eq('id', user.id)
+        .single()
+      
+      if (!profileError && profileData) {
+        profile = profileData
+      }
+    } catch (profileErr) {
+      console.error('Failed to fetch profile:', profileErr)
+      // 프로필 조회 실패는 무시하고 계속 진행
+    }
 
     const { company_code, ecount_user_id } = await req.json()
     
@@ -105,37 +115,73 @@ serve(async (req) => {
     
     const duration = Date.now() - startTime
 
-    // API 로그 저장
-    await supabaseClient
-      .from('api_logs')
-      .insert({
-        user_id: user.id,
-        function_name: 'ecount-connection-test',
-        request_id: traceId,
-        status_code: loginResponse.status,
-        duration_ms: duration,
-        trace_id: traceId,
-        error_message: loginResponse.ok ? null : JSON.stringify(loginData)
-      })
+    // API 로그 저장 (에러가 발생해도 계속 진행)
+    try {
+      await supabaseClient
+        .from('api_logs')
+        .insert({
+          user_id: user.id,
+          function_name: 'ecount-connection-test',
+          request_id: traceId,
+          status_code: loginResponse.status,
+          duration_ms: duration,
+          trace_id: traceId,
+          error_message: loginResponse.ok ? null : JSON.stringify(loginData)
+        })
+    } catch (logError) {
+      console.error('Failed to save API log:', logError)
+      // 로그 저장 실패는 무시하고 계속 진행
+    }
 
     const status = loginResponse.ok && loginData.session_id ? 'connected' : 'error'
     const maskedApiKeySuffix = apiKey.slice(-4)
 
     // ecount_connections 테이블 업데이트
-    await supabaseClient
-      .from('ecount_connections')
-      .upsert({
-        user_id: user.id,
-        org_id: profile?.org_id || null,
+    // unique 제약조건: (org_id, connection_name)
+    try {
+      const upsertData: any = {
         connection_name: 'primary',
         company_code,
         ecount_user_id,
         status,
         masked_api_key_suffix: maskedApiKeySuffix,
         updated_at: new Date().toISOString()
-      }, {
-        onConflict: profile?.org_id ? 'org_id,connection_name' : 'user_id'
-      })
+      }
+
+      // org_id가 있으면 org_id 기반으로, 없으면 user_id 기반으로
+      if (profile?.org_id) {
+        upsertData.org_id = profile.org_id
+        upsertData.user_id = user.id
+        await supabaseClient
+          .from('ecount_connections')
+          .upsert(upsertData, {
+            onConflict: 'org_id,connection_name'
+          })
+      } else {
+        // org_id가 없는 경우, 기존 레코드를 찾아서 업데이트하거나 새로 생성
+        const { data: existing } = await supabaseClient
+          .from('ecount_connections')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('connection_name', 'primary')
+          .single()
+
+        if (existing) {
+          await supabaseClient
+            .from('ecount_connections')
+            .update(upsertData)
+            .eq('id', existing.id)
+        } else {
+          upsertData.user_id = user.id
+          await supabaseClient
+            .from('ecount_connections')
+            .insert(upsertData)
+        }
+      }
+    } catch (connError) {
+      console.error('Failed to save ecount connection:', connError)
+      // 연결 정보 저장 실패는 무시하고 계속 진행
+    }
 
     if (!loginResponse.ok || !loginData.session_id) {
       const errorMessage = loginData.message || loginData.error || loginData.Message || loginData.Error || 'Ecount 로그인에 실패했습니다.'
