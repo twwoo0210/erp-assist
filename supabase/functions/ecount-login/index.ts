@@ -99,7 +99,7 @@ serve(async (req) => {
           payload: {
             company_code: companyCode,
             user_id: userId,
-            user_pwd: '[HIDDEN]'
+            api_key: '[HIDDEN]'
           },
           result: {
             status: loginResult.status,
