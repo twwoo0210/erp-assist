@@ -156,6 +156,8 @@ serve(async (req) => {
 
   } catch (error: any) {
     console.error('Error in ecount-connection-test:', error)
+    console.error('Error stack:', error.stack)
+    console.error('Error name:', error.name)
     
     // 에러 타입별 상태 코드 결정
     let statusCode = 500
@@ -171,6 +173,9 @@ serve(async (req) => {
       errorMessage = error.message
     }
     
+    // 프론트엔드에서 에러를 처리할 수 있도록 200 상태 코드로 반환
+    // Supabase 클라이언트가 non-2xx 상태 코드를 받으면 error 객체로 처리하므로
+    // 실제 에러 정보를 포함한 JSON을 200으로 반환
     return new Response(
       JSON.stringify({ 
         success: false,
@@ -181,12 +186,12 @@ serve(async (req) => {
         trace_id: crypto.randomUUID(),
         details: {
           type: error.name || 'UnknownError',
-          message: error.message,
-          stack: error.stack
+          message: error.message || '알 수 없는 오류',
+          stack: error.stack || '스택 정보 없음'
         }
       }),
       { 
-        status: statusCode, 
+        status: 200, // 프론트엔드에서 에러를 처리할 수 있도록 200 반환
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )

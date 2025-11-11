@@ -61,16 +61,32 @@ export default function EcountSettingsPage() {
           fullError: fnError
         })
         
-        // Supabase Edge Function 에러 구조 분석
+        // Supabase Edge Function이 non-2xx 상태 코드를 반환한 경우
+        // 실제 에러 정보는 context나 message에 있을 수 있음
         let errorMessage = fnError.message || 'Ecount 연결 테스트 중 오류가 발생했습니다.'
         let statusCode = fnError.status || fnError.context?.status || null
         
-        // 에러 메시지에서 상태 코드 추출 시도
-        if (!statusCode && fnError.message) {
-          const statusMatch = fnError.message.match(/status[:\s]+(\d{3})/i) || 
+        // "non-2xx status code" 메시지에서 실제 상태 코드 추출
+        if (fnError.message?.includes('non-2xx')) {
+          const statusMatch = fnError.message.match(/status code[:\s]+(\d{3})/i) || 
                              fnError.message.match(/(\d{3})/)
           if (statusMatch) {
             statusCode = statusMatch[1]
+          }
+        }
+        
+        // context에서 추가 정보 추출 시도
+        if (fnError.context) {
+          try {
+            const contextStr = typeof fnError.context === 'string' 
+              ? fnError.context 
+              : JSON.stringify(fnError.context)
+            const contextMatch = contextStr.match(/status[:\s]+(\d{3})/i)
+            if (contextMatch && !statusCode) {
+              statusCode = contextMatch[1]
+            }
+          } catch (e) {
+            // context 파싱 실패 무시
           }
         }
         
