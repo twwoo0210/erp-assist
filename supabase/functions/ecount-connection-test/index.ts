@@ -7,40 +7,79 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('=== ecount-connection-test Edge Function Called ===')
-  console.log('Method:', req.method)
-  console.log('URL:', req.url)
-  console.log('Headers:', Object.fromEntries(req.headers.entries()))
-  
-  if (req.method === 'OPTIONS') {
-    console.log('OPTIONS request - returning CORS headers')
-    return new Response('ok', { headers: corsHeaders })
-  }
-
   try {
+    console.log('=== ecount-connection-test Edge Function Called ===')
+    console.log('Method:', req.method)
+    console.log('URL:', req.url)
+    console.log('Headers:', Object.fromEntries(req.headers.entries()))
+    
+    if (req.method === 'OPTIONS') {
+      console.log('OPTIONS request - returning CORS headers')
+      return new Response('ok', { headers: corsHeaders })
+    }
+
     console.log('Processing request...')
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
+    
+    // 환경 변수 확인
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      urlLength: supabaseUrl?.length || 0,
+      keyLength: supabaseServiceKey?.length || 0
+    })
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        SUPABASE_URL: !!supabaseUrl,
+        SUPABASE_SERVICE_ROLE_KEY: !!supabaseServiceKey
+      })
       return new Response(
-        JSON.stringify({ error: 'Authorization header required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: false,
+          error: 'Server configuration error',
+          message: '서버 설정이 완료되지 않았습니다.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      console.log('No Authorization header')
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Authorization header required',
+          message: '인증 헤더가 필요합니다.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Creating Supabase client...')
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('Supabase client created successfully')
 
     const token = authHeader.replace('Bearer ', '')
+    console.log('Validating token...')
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     
     if (authError || !user) {
+      console.error('Token validation failed:', authError)
       return new Response(
-        JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: false,
+          error: 'Invalid token',
+          message: '인증 토큰이 유효하지 않습니다.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+    
+    console.log('Token validated, user:', user.email)
 
     // 사용자의 org_id 가져오기 (에러가 발생해도 계속 진행)
     let profile: any = null
