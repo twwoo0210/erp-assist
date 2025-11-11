@@ -93,7 +93,25 @@ export default function EcountSettingsPage() {
           }
         }
       } else {
-        setError(data?.message || 'Ecount 연결 테스트에 실패했습니다.')
+        // 에러 응답 처리
+        const errorMsg = data?.error || data?.message || 'Ecount 연결 테스트에 실패했습니다.'
+        const errorCode = data?.error_code || data?.http_status || ''
+        const errorDetails = data?.details
+        
+        console.error('Ecount 연결 테스트 실패:', {
+          error: errorMsg,
+          code: errorCode,
+          details: errorDetails,
+          fullResponse: data
+        })
+        
+        let displayError = errorMsg
+        if (errorCode) {
+          displayError = `${errorMsg} (코드: ${errorCode})`
+        }
+        
+        setError(displayError)
+        setTestResult(data)
       }
     } catch (err: any) {
       console.error('Ecount 연결 테스트 오류:', err)
@@ -106,9 +124,12 @@ export default function EcountSettingsPage() {
       // 더 명확한 에러 메시지
       let errorMessage = 'Ecount 연결 테스트 중 오류가 발생했습니다.'
       
-      if (err.message?.includes('non-2xx') || err.message?.includes('status code')) {
+      // Supabase Edge Function 에러 처리
+      if (err.status) {
+        errorMessage = `서버 오류가 발생했습니다 (${err.status}). ${err.message || 'Ecount API 연결을 확인해주세요.'}`
+      } else if (err.message?.includes('non-2xx') || err.message?.includes('status code')) {
         const statusMatch = err.message?.match(/(\d{3})/)
-        const statusCode = statusMatch ? statusMatch[1] : '알 수 없음'
+        const statusCode = statusMatch ? statusMatch[1] : err.status || '알 수 없음'
         errorMessage = `서버 오류가 발생했습니다 (${statusCode}). Ecount API 연결을 확인해주세요.`
       } else if (err.message?.includes('Unauthorized') || err.status === 401) {
         errorMessage = '인증에 실패했습니다. 다시 로그인해주세요.'
