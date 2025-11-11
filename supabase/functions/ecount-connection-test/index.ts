@@ -323,45 +323,63 @@ serve(async (req) => {
     )
 
   } catch (error: any) {
-    console.error('Error in ecount-connection-test:', error)
-    console.error('Error stack:', error.stack)
-    console.error('Error name:', error.name)
+    console.error('=== CRITICAL ERROR in ecount-connection-test ===')
+    console.error('Error type:', typeof error)
+    console.error('Error name:', error?.name)
+    console.error('Error message:', error?.message)
+    console.error('Error stack:', error?.stack)
+    console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
     
     // 에러 타입별 상태 코드 결정
     let statusCode = 500
     let errorMessage = 'Internal server error'
     
-    if (error.message?.includes('파싱 실패') || error.message?.includes('JSON')) {
+    if (error?.message?.includes('파싱 실패') || error?.message?.includes('JSON')) {
       statusCode = 502 // Bad Gateway
       errorMessage = 'Ecount API 응답을 처리할 수 없습니다.'
-    } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+    } else if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
       statusCode = 503 // Service Unavailable
       errorMessage = 'Ecount API 서버에 연결할 수 없습니다.'
-    } else if (error.message) {
+    } else if (error?.message) {
       errorMessage = error.message
+    } else if (error?.toString) {
+      errorMessage = error.toString()
     }
     
     // 프론트엔드에서 에러를 처리할 수 있도록 200 상태 코드로 반환
     // Supabase 클라이언트가 non-2xx 상태 코드를 받으면 error 객체로 처리하므로
     // 실제 에러 정보를 포함한 JSON을 200으로 반환
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: errorMessage,
-        message: errorMessage,
-        error_code: statusCode,
-        http_status: statusCode,
-        trace_id: crypto.randomUUID(),
-        details: {
-          type: error.name || 'UnknownError',
-          message: error.message || '알 수 없는 오류',
-          stack: error.stack || '스택 정보 없음'
+    try {
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: errorMessage,
+          message: errorMessage,
+          error_code: statusCode,
+          http_status: statusCode,
+          trace_id: crypto.randomUUID(),
+          details: {
+            type: error?.name || 'UnknownError',
+            message: error?.message || '알 수 없는 오류',
+            stack: error?.stack || '스택 정보 없음',
+            rawError: error?.toString?.() || String(error)
+          }
+        }),
+        { 
+          status: 200, // 프론트엔드에서 에러를 처리할 수 있도록 200 반환
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      }),
-      { 
-        status: 200, // 프론트엔드에서 에러를 처리할 수 있도록 200 반환
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+      )
+    } catch (responseError) {
+      // JSON.stringify도 실패하는 경우
+      console.error('Failed to create error response:', responseError)
+      return new Response(
+        'Internal server error',
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'text/plain' } 
+        }
+      )
+    }
   }
 })
