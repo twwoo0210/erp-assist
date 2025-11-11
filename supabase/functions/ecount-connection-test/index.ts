@@ -77,7 +77,17 @@ serve(async (req) => {
       })
     })
 
-    const loginData = await loginResponse.json()
+    // 응답 본문을 텍스트로 먼저 읽기
+    const responseText = await loginResponse.text()
+    let loginData: any = {}
+    
+    try {
+      loginData = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('Failed to parse login response:', responseText)
+      throw new Error(`Ecount API 응답 파싱 실패: ${responseText.substring(0, 200)}`)
+    }
+    
     const duration = Date.now() - startTime
 
     // API 로그 저장
@@ -112,17 +122,22 @@ serve(async (req) => {
         onConflict: profile?.org_id ? 'org_id,connection_name' : 'user_id'
       })
 
-    if (!loginResponse.ok) {
+    if (!loginResponse.ok || !loginData.session_id) {
+      const errorMessage = loginData.message || loginData.error || loginData.Message || 'Ecount 로그인에 실패했습니다.'
+      const errorCode = loginData.code || loginData.Code || loginResponse.status
+      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: 'Connection test failed', 
+          error: errorMessage,
+          error_code: errorCode,
           details: loginData,
           trace_id: traceId,
-          status
+          status: 'error',
+          http_status: loginResponse.status
         }),
         { 
-          status: loginResponse.status, 
+          status: 200, // 프론트엔드에서 에러를 처리할 수 있도록 200 반환
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
