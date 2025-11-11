@@ -102,25 +102,60 @@ export const useAuthProvider = () => {
       return;
     }
 
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => {
+    let mounted = true;
+
+    // 초기 세션 로드 및 주기적 갱신
+    const loadSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (error) {
+          console.error('세션 정보를 불러오지 못했습니다:', error);
+          // 에러 발생 시 세션 초기화
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setOrganization(null);
+          setLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          loadUserData(session.user.id);
+          await loadUserData(session.user.id);
+        } else {
+          setProfile(null);
+          setOrganization(null);
         }
-      })
-      .catch((error) => {
-        console.error('세션 정보를 불러오지 못했습니다:', error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      } catch (error) {
+        console.error('세션 로드 중 예외 발생:', error);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setOrganization(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
+    // 초기 세션 로드
+    loadSession();
+
+    // 인증 상태 변경 리스너
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
+        if (!mounted) return;
+
+        console.log('Auth state changed:', event, newSession?.user?.email);
+        
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
@@ -135,7 +170,34 @@ export const useAuthProvider = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    // 세션 갱신을 위한 주기적 체크 (5분마다)
+    const refreshInterval = setInterval(async () => {
+      if (!mounted || !supabase) return;
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          if (session?.user) {
+            setSession(session);
+            setUser(session.user);
+          } else {
+            // 세션이 만료된 경우
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+            setOrganization(null);
+          }
+        }
+      } catch (error) {
+        console.error('세션 갱신 중 오류:', error);
+      }
+    }, 5 * 60 * 1000); // 5분
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: any) => {

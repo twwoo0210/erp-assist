@@ -37,14 +37,24 @@ function LoadingSpinner() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const location = useLocation();
+  const [checkingSession, setCheckingSession] = useState(true);
 
-  if (loading) {
+  // 세션이 있는지 추가 확인
+  useEffect(() => {
+    if (!loading) {
+      // 세션 체크 완료
+      setCheckingSession(false);
+    }
+  }, [loading]);
+
+  if (loading || checkingSession) {
     return <LoadingSpinner />;
   }
 
-  if (!user) {
+  // user가 없거나 session이 없으면 로그인 페이지로 리다이렉트
+  if (!user || !session) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
@@ -98,4 +108,3 @@ function App() {
 }
 
 export default App;
-

@@ -33,19 +33,19 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ?ㅻ뜑 */}
+      {/* 헤더 */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900">대시보드</h1>
           <p className="mt-1 text-sm text-gray-600">
-            ?덈뀞?섏꽭?? {profile?.full_name}?? ?ㅻ뒛??醫뗭? ?섎（ ?섏꽭??
+            안녕하세요, {profile?.full_name || user?.email}님! 오늘도 좋은 하루 되세요.
           </p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* ?듦퀎 移대뱶 */}
+          {/* 주요 지표 */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-5">
@@ -56,7 +56,7 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        珥?二쇰Ц
+                        오늘 주문
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {loading ? '-' : kpi.todayTotal}
@@ -76,7 +76,7 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        泥섎━ ?꾨즺
+                        처리 완료
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {loading ? '-' : kpi.success}
@@ -96,7 +96,8 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        ?湲?以?                      </dt>
+                        처리 중
+                      </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {loading ? '-' : kpi.pending}
                       </dd>
@@ -115,7 +116,7 @@ export default function DashboardPage() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        ?대쾲 ??留ㅼ텧
+                        처리 실패
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {loading ? '-' : kpi.failed}
@@ -127,11 +128,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 鍮좊Ⅸ ?≪뀡 */}
+          {/* 빠른 작업 */}
           <div className="bg-white shadow rounded-lg mb-8">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                鍮좊Ⅸ ?≪뀡
+                빠른 작업
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
@@ -145,10 +146,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-lg font-medium text-gray-900">
-                      AI 二쇰Ц ?낅젰
+                      AI 주문 입력
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      ?먯뿰?대줈 二쇰Ц???낅젰?섍퀬 ?먮룞?쇰줈 泥섎━?섏꽭??                    </p>
+                      자연어로 주문 내용을 입력하여 자동으로 처리합니다.
+                    </p>
                   </div>
                 </Link>
 
@@ -163,10 +165,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-lg font-medium text-gray-900">
-                      梨꾪똿 ?곷떞
+                      AI 채팅
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      AI ?댁떆?ㅽ꽩?몄? ??뷀븯硫??낅Т瑜?泥섎━?섏꽭??                    </p>
+                      AI 어시스턴트와 대화하여 주문을 처리합니다.
+                    </p>
                   </div>
                 </Link>
 
@@ -181,10 +184,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-lg font-medium text-gray-900">
-                      Ecount ?곌껐
+                      Ecount 연결
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      Ecount ?쒖뒪?쒓낵 ?곕룞?섏뿬 ?곗씠?곕? ?숆린?뷀븯?몄슂
+                      Ecount 시스템과 연동하여 주문을 자동으로 전송합니다
                     </p>
                   </div>
                 </Link>
@@ -200,10 +203,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-4">
                     <h3 className="text-lg font-medium text-gray-900">
-                      怨꾩젙 ?ㅼ젙
+                      계정 설정
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
-                      ?꾨줈?꾧낵 議곗쭅 ?뺣낫瑜?愿由ы븯?몄슂
+                      프로필과 조직 정보를 관리하세요
                     </p>
                   </div>
                 </Link>
@@ -211,11 +214,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 議곗쭅 ?뺣낫 */}
+          {/* 조직 정보 */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                議곗쭅 ?뺣낫
+                조직 정보
               </h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
@@ -231,7 +234,6 @@ export default function DashboardPage() {
                   <p className="mt-1 text-sm text-gray-900">{profile?.role === "owner" ? "소유자" : profile?.role === "admin" ? "관리자" : "멤버"}</p>
                 </div>
               </div>
-                  <label className="block text-sm font-medium text-gray-700">媛?낆씪</label>
             </div>
           </div>
         </div>
@@ -239,7 +241,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-
-
-
