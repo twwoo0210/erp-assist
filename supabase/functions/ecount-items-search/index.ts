@@ -121,13 +121,22 @@ serve(async (req) => {
     }
 
     // 품목 데이터 정규화 (매뉴얼에 따른 응답 구조)
-    const resultData = searchData.Data?.Result || searchData.Result || []
+    // Result는 JSON 문자열로 반환될 수 있음
+    let resultData = searchData.Data?.Result || searchData.Result || []
+    if (typeof resultData === 'string') {
+      try {
+        resultData = JSON.parse(resultData)
+      } catch (e) {
+        resultData = []
+      }
+    }
+    
     const items = (Array.isArray(resultData) ? resultData : [resultData]).map((item: any) => ({
       code: item.PROD_CD || item.code || '',
       name: item.PROD_DES || item.PROD_NM || item.name || '',
       price: parseFloat(item.OUT_PRICE || item.PRICE || item.price || 0),
       unit: item.UNIT || item.unit || 'EA'
-    }))
+    })).filter((item: any) => item.code) // 빈 항목 제거
 
     return new Response(
       JSON.stringify({
