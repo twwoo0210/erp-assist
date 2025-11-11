@@ -6,7 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+// 핸들러 함수를 별도로 분리하여 에러 처리 강화
+async function handleRequest(req: Request): Promise<Response> {
   try {
     console.log('=== ecount-connection-test Edge Function Called ===')
     console.log('Method:', req.method)
@@ -381,5 +382,35 @@ serve(async (req) => {
         }
       )
     }
+  }
+}
+
+// serve 함수에 핸들러를 전달하고, 추가 에러 처리
+serve(async (req) => {
+  try {
+    return await handleRequest(req)
+  } catch (outerError: any) {
+    // handleRequest 내부에서 처리되지 않은 예외 처리
+    console.error('=== OUTER ERROR HANDLER ===')
+    console.error('Outer error:', outerError)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Unexpected server error',
+        message: outerError?.message || '예상치 못한 서버 오류가 발생했습니다.',
+        error_code: 500,
+        http_status: 500,
+        trace_id: crypto.randomUUID(),
+        details: {
+          type: outerError?.name || 'UnknownError',
+          message: outerError?.message || '알 수 없는 오류',
+          stack: outerError?.stack || '스택 정보 없음'
+        }
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
 })
