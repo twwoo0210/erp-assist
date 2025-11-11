@@ -48,22 +48,36 @@ export default function AccountSettingsPage() {
   const testEcountConnection = async () => {
     setLoading(true);
     try {
-      const response = await supabase.functions.invoke('ensure-ecount-connection', {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('로그인이 필요합니다.');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('ecount-connection-test', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: {
+          company_code: ecountStatus?.company_code || '',
+          ecount_user_id: ecountStatus?.ecount_user_id || ''
         }
       });
 
-      if (response.data?.ok) {
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success) {
         alert('Ecount 연결 테스트 성공!');
         await loadEcountStatus();
         await loadRecentLogs();
       } else {
-        alert('Ecount 연결 테스트 실패');
+        alert(`Ecount 연결 테스트 실패: ${data?.error || '알 수 없는 오류'}`);
       }
     } catch (error: any) {
       console.error('연결 테스트 실패:', error);
-      alert(`연결 테스트 실패: ${error.message}`);
+      alert(`연결 테스트 실패: ${error.message || '알 수 없는 오류'}`);
     } finally {
       setLoading(false);
     }
