@@ -136,9 +136,14 @@ async function handleRequest(req: Request): Promise<Response> {
     const apiKey = Deno.env.get('ECOUNT_API_KEY')
 
     if (!apiKey) {
+      console.error('ECOUNT_API_KEY not found in environment')
       return new Response(
-        JSON.stringify({ error: 'Ecount API key not configured in secrets' }),
-        { status: 424, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: false,
+          error: 'Ecount API key not configured in secrets',
+          message: 'Ecount API 키가 설정되지 않았습니다.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
