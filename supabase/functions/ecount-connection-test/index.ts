@@ -52,12 +52,33 @@ serve(async (req) => {
       // 프로필 조회 실패는 무시하고 계속 진행
     }
 
-    const { company_code, ecount_user_id } = await req.json()
+    // 요청 본문 파싱
+    let company_code: string
+    let ecount_user_id: string
+    try {
+      const body = await req.json()
+      company_code = body.company_code
+      ecount_user_id = body.ecount_user_id
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Invalid request body',
+          message: '요청 본문을 파싱할 수 없습니다.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     
     if (!company_code || !ecount_user_id) {
       return new Response(
-        JSON.stringify({ error: 'Company code and Ecount user ID are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: false,
+          error: 'Company code and Ecount user ID are required',
+          message: '회사코드와 사용자 ID를 모두 입력해주세요.'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -75,42 +96,67 @@ serve(async (req) => {
     }
 
     // Ecount 로그인 테스트
-    const loginRequest = {
-      company_code,
-      user_id: ecount_user_id,
-      api_key: apiKey
-    }
-    
-    console.log('Ecount login request:', {
-      company_code,
-      user_id: ecount_user_id,
-      api_key: apiKey ? `${apiKey.substring(0, 4)}...${apiKey.slice(-4)}` : 'MISSING'
-    })
-    
-    const loginResponse = await fetch('http://sboapi.ecount.com/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(loginRequest)
-    })
-
-    console.log('Ecount login response status:', loginResponse.status)
-    console.log('Ecount login response headers:', Object.fromEntries(loginResponse.headers.entries()))
-
-    // 응답 본문을 텍스트로 먼저 읽기
-    const responseText = await loginResponse.text()
-    console.log('Ecount login response text (first 500 chars):', responseText.substring(0, 500))
-    
+    let loginResponse: Response
+    let responseText: string
     let loginData: any = {}
     
     try {
-      loginData = JSON.parse(responseText)
-      console.log('Ecount login parsed data:', JSON.stringify(loginData).substring(0, 500))
-    } catch (parseError) {
-      console.error('Failed to parse login response:', responseText)
-      console.error('Parse error:', parseError)
-      throw new Error(`Ecount API 응답 파싱 실패: ${responseText.substring(0, 200)}`)
+      const loginRequest = {
+        company_code,
+        user_id: ecount_user_id,
+        api_key: apiKey
+      }
+      
+      console.log('Ecount login request:', {
+        company_code,
+        user_id: ecount_user_id,
+        api_key: apiKey ? `${apiKey.substring(0, 4)}...${apiKey.slice(-4)}` : 'MISSING'
+      })
+      
+      loginResponse = await fetch('http://sboapi.ecount.com/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(loginRequest)
+      })
+
+      console.log('Ecount login response status:', loginResponse.status)
+      console.log('Ecount login response headers:', Object.fromEntries(loginResponse.headers.entries()))
+
+      // 응답 본문을 텍스트로 먼저 읽기
+      responseText = await loginResponse.text()
+      console.log('Ecount login response text (first 500 chars):', responseText.substring(0, 500))
+      
+      try {
+        loginData = JSON.parse(responseText)
+        console.log('Ecount login parsed data:', JSON.stringify(loginData).substring(0, 500))
+      } catch (parseError) {
+        console.error('Failed to parse login response:', responseText)
+        console.error('Parse error:', parseError)
+        // JSON 파싱 실패는 에러로 처리하되, 함수는 계속 진행
+        loginData = {
+          error: 'JSON 파싱 실패',
+          raw_response: responseText.substring(0, 500)
+        }
+      }
+    } catch (fetchError: any) {
+      console.error('Ecount API fetch error:', fetchError)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Ecount API 서버에 연결할 수 없습니다.',
+          message: fetchError.message || '네트워크 오류가 발생했습니다.',
+          error_code: 503,
+          http_status: 503,
+          trace_id: traceId,
+          details: {
+            type: fetchError.name || 'NetworkError',
+            message: fetchError.message || '알 수 없는 네트워크 오류'
+          }
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
     
     const duration = Date.now() - startTime
