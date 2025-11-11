@@ -26,6 +26,13 @@ jobs:
         run: |
           if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
             echo "::error::Missing SUPABASE_ACCESS_TOKEN (add as Actions secret/variable)"
+            echo "::error::Please set SUPABASE_ACCESS_TOKEN in GitHub Secrets (Settings > Secrets and variables > Actions)"
+            echo "::error::Token format should be: sbp_0102...1920"
+            exit 1
+          fi
+          if [[ ! "$SUPABASE_ACCESS_TOKEN" =~ ^sbp_ ]]; then
+            echo "::error::Invalid SUPABASE_ACCESS_TOKEN format"
+            echo "::error::Token must start with 'sbp_' (e.g., sbp_0102...1920)"
             exit 1
           fi
           supabase link --project-ref "$SUPABASE_PROJECT_REF"
