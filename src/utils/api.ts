@@ -72,6 +72,8 @@ export const api = {
 
   // AI Parse Order - Supabase Edge Function 사용
   parseOrder: async (inputText: string) => {
+    console.log('API: parseOrder called with:', inputText)
+    
     const result = await fetchAPI<{
       customer_name: string
       items: Array<{
@@ -90,6 +92,8 @@ export const api = {
       body: JSON.stringify({ inputText }),
     })
 
+    console.log('API: Raw result from Supabase:', result)
+
     // 응답 데이터 검증
     if (!result) {
       throw new APIError('AI 응답이 비어있습니다.', 502)
@@ -104,17 +108,24 @@ export const api = {
     }
 
     // 프론트엔드 형식에 맞게 변환
-    return {
+    const transformed = {
       customer: result.customer_name,
-      items: result.items.map(item => ({
-        code: item.matched_item?.code || '',
-        name: item.item_name || '',
-        quantity: item.qty || 0,
-        price: item.matched_item?.price || 0,
-        unit: item.matched_item?.unit || '개',
-        note: item.confidence ? `매칭 신뢰도: ${(item.confidence * 100).toFixed(0)}%` : undefined,
-      })),
+      items: result.items.map((item, index) => {
+        const transformedItem = {
+          code: item.matched_item?.code || '',
+          name: item.item_name || `품목 ${index + 1}`,
+          quantity: item.qty || 0,
+          price: item.matched_item?.price || 0,
+          unit: item.matched_item?.unit || '개',
+          note: item.confidence ? `매칭 신뢰도: ${(item.confidence * 100).toFixed(0)}%` : undefined,
+        }
+        console.log(`API: Transformed item ${index}:`, transformedItem)
+        return transformedItem
+      }),
     }
+
+    console.log('API: Final transformed result:', transformed)
+    return transformed
   },
 
   // Create Order
