@@ -150,8 +150,32 @@ export default function EcountSettingsPage() {
           fullResponse: data
         })
         
+        // 상세 에러 정보 구성
         let displayError = errorMsg
-        if (errorCode) {
+        
+        // Ecount API 응답에서 실제 에러 메시지 추출
+        if (errorDetails) {
+          const ecountError = errorDetails.Error || errorDetails.error || errorDetails.Message || errorDetails.message
+          const ecountCode = errorDetails.Code || errorDetails.code || errorDetails.ErrorCode
+          const httpStatus = errorDetails.http_status || data?.http_status
+          
+          if (ecountError && ecountError !== errorMsg) {
+            displayError = ecountError
+          }
+          
+          if (ecountCode) {
+            displayError = `${displayError} (Ecount 코드: ${ecountCode})`
+          }
+          
+          if (httpStatus && httpStatus !== 200) {
+            displayError = `${displayError} (HTTP ${httpStatus})`
+          }
+          
+          // 응답 텍스트가 있으면 표시 (디버깅용)
+          if (errorDetails.response_text) {
+            console.log('Ecount API 응답 텍스트:', errorDetails.response_text)
+          }
+        } else if (errorCode) {
           displayError = `${errorMsg} (코드: ${errorCode})`
         }
         
