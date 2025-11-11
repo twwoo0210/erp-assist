@@ -1,6 +1,6 @@
-// API utility functions for Hono backend
+// API utility functions for Supabase Edge Functions
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+import { supabase } from './supabase'
 
 export class APIError extends Error {
   constructor(
@@ -18,35 +18,40 @@ async function fetchAPI<T = any>(
   options?: RequestInit
 ): Promise<T> {
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+    // Supabase Edge Functions 사용
+    if (!supabase) {
+      throw new APIError('Supabase가 초기화되지 않았습니다.', 500)
+    }
+
+    const { data, error } = await supabase.functions.invoke(endpoint, {
+      body: options?.body ? JSON.parse(options.body as string) : undefined,
+      headers: options?.headers as Record<string, string> | undefined,
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    if (error) {
       throw new APIError(
-        data.error || `API 요청 실패: ${response.status}`,
-        response.status,
-        data
+        error.message || `API 요청 실패: ${error.status || 500}`,
+        error.status || 500,
+        error
       )
     }
 
-    return data
+    return data as T
   } catch (error: any) {
     if (error instanceof APIError) {
       throw error
+    }
+
+    // JSON 파싱 오류 처리
+    if (error.message?.includes('JSON') || error.message?.includes('Unexpected token')) {
+      throw new APIError('서버 응답을 처리할 수 없습니다. API 엔드포인트를 확인해주세요.', 502, error)
     }
 
     if (error.name === 'AbortError') {
       throw new APIError('요청 시간이 초과되었습니다.', 408)
     }
 
-    if (error.message?.includes('fetch')) {
+    if (error.message?.includes('fetch') || error.message?.includes('network')) {
       throw new APIError('네트워크 연결을 확인해주세요.', 0)
     }
 
@@ -62,20 +67,46 @@ async function fetchAPI<T = any>(
 export const api = {
   // Health check
   health: async () => {
-    return fetchAPI('/health')
+    return fetchAPI('health')
   },
 
-  // AI Parse Order
+  // AI Parse Order - Supabase Edge Function 사용
   parseOrder: async (inputText: string) => {
-    return fetchAPI('/ai-parse-order', {
+    const result = await fetchAPI<{
+      customer_name: string
+      items: Array<{
+        item_name: string
+        qty: number
+        matched_item?: {
+          code: string
+          name: string
+          price: number
+          unit?: string
+        }
+        confidence?: number
+      }>
+    }>('ai-parse-order', {
       method: 'POST',
       body: JSON.stringify({ inputText }),
     })
+
+    // 프론트엔드 형식에 맞게 변환
+    return {
+      customer: result.customer_name,
+      items: result.items.map(item => ({
+        code: item.matched_item?.code || '',
+        name: item.item_name,
+        quantity: item.qty,
+        price: item.matched_item?.price || 0,
+        unit: item.matched_item?.unit || '개',
+        note: item.confidence ? `매칭 신뢰도: ${(item.confidence * 100).toFixed(0)}%` : undefined,
+      })),
+    }
   },
 
   // Create Order
   createOrder: async (orderData: any) => {
-    return fetchAPI('/ecount-create-order', {
+    return fetchAPI('ecount-create-order', {
       method: 'POST',
       body: JSON.stringify({ orderData }),
     })
