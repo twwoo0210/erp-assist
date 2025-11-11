@@ -104,52 +104,8 @@ export const useAuthProvider = () => {
 
     let mounted = true;
 
-    // 초기 세션 로드 및 주기적 갱신
-    const loadSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-
-        if (error) {
-          console.error('세션 정보를 불러오지 못했습니다:', error);
-          // 에러 발생 시 세션 초기화
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setOrganization(null);
-          setLoading(false);
-          return;
-        }
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await loadUserData(session.user.id);
-        } else {
-          setProfile(null);
-          setOrganization(null);
-        }
-        
-        // loadUserData 완료 후 loading을 false로 설정
-        setLoading(false);
-      } catch (error) {
-        console.error('세션 로드 중 예외 발생:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setOrganization(null);
-          setLoading(false);
-        }
-      }
-    };
-
-    // 초기 세션 로드
-    loadSession();
-
-    // 인증 상태 변경 리스너
+    // 인증 상태 변경 리스너 (초기 세션 로드 포함)
+    // onAuthStateChange는 자동으로 초기 세션을 로드하고 INITIAL_SESSION 이벤트를 발생시킵니다
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted) return;
@@ -166,6 +122,7 @@ export const useAuthProvider = () => {
           setOrganization(null);
         }
         
+        // 모든 이벤트 처리 후 loading을 false로 설정
         setLoading(false);
       }
     );
