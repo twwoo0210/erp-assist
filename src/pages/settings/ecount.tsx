@@ -97,7 +97,28 @@ export default function EcountSettingsPage() {
       }
     } catch (err: any) {
       console.error('Ecount 연결 테스트 오류:', err)
-      setError(err.message || 'Ecount 연결 테스트 중 오류가 발생했습니다.')
+      console.error('Error details:', {
+        message: err.message,
+        status: err.status,
+        details: err.details
+      })
+      
+      // 더 명확한 에러 메시지
+      let errorMessage = 'Ecount 연결 테스트 중 오류가 발생했습니다.'
+      
+      if (err.message?.includes('non-2xx') || err.message?.includes('status code')) {
+        const statusMatch = err.message?.match(/(\d{3})/)
+        const statusCode = statusMatch ? statusMatch[1] : '알 수 없음'
+        errorMessage = `서버 오류가 발생했습니다 (${statusCode}). Ecount API 연결을 확인해주세요.`
+      } else if (err.message?.includes('Unauthorized') || err.status === 401) {
+        errorMessage = '인증에 실패했습니다. 다시 로그인해주세요.'
+      } else if (err.message?.includes('not configured') || err.message?.includes('missing')) {
+        errorMessage = 'Ecount API 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.'
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setTesting(false)
     }

@@ -158,9 +158,22 @@ export default function AIOrderEntryPage() {
       console.error('Error details:', {
         message: err.message,
         stack: err.stack,
-        details: err.details
+        details: err.details,
+        status: err.status
       })
-      setError(err.message || 'AI 주문 분석 중 오류가 발생했습니다.')
+      
+      // 더 명확한 에러 메시지
+      let errorMessage = 'AI 주문 분석 중 오류가 발생했습니다.'
+      
+      if (err.message?.includes('non-2xx') || err.message?.includes('status code')) {
+        errorMessage = 'AI 서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+      } else if (err.message?.includes('Supabase')) {
+        errorMessage = '서비스 연결에 문제가 있습니다. 페이지를 새로고침해주세요.'
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setProcessing(false)
     }

@@ -23,23 +23,63 @@ async function fetchAPI<T = any>(
       throw new APIError('Supabase가 초기화되지 않았습니다.', 500)
     }
 
+    console.log(`[API] Calling Edge Function: ${endpoint}`, options?.body ? JSON.parse(options.body as string) : {})
+
     const { data, error } = await supabase.functions.invoke(endpoint, {
       body: options?.body ? JSON.parse(options.body as string) : undefined,
       headers: options?.headers as Record<string, string> | undefined,
     })
 
+    console.log(`[API] Edge Function response:`, { endpoint, data, error })
+
     if (error) {
+      // Supabase Edge Function 에러는 context에 더 자세한 정보가 있을 수 있음
+      const errorMessage = error.message || `API 요청 실패: ${error.status || 500}`
+      const errorDetails = error.context || error
+      
+      console.error(`[API] Edge Function error:`, {
+        endpoint,
+        message: errorMessage,
+        status: error.status,
+        context: errorDetails
+      })
+
       throw new APIError(
-        error.message || `API 요청 실패: ${error.status || 500}`,
+        errorMessage,
         error.status || 500,
-        error
+        errorDetails
       )
+    }
+
+    // data가 null이거나 undefined인 경우도 확인
+    if (data === null || data === undefined) {
+      console.warn(`[API] Edge Function returned null/undefined for: ${endpoint}`)
+      throw new APIError(`서버 응답이 비어있습니다: ${endpoint}`, 502)
     }
 
     return data as T
   } catch (error: any) {
     if (error instanceof APIError) {
       throw error
+    }
+
+    // Supabase 함수 호출 에러 처리
+    if (error?.message?.includes('non-2xx') || error?.message?.includes('status code')) {
+      const statusMatch = error.message?.match(/(\d{3})/)
+      const statusCode = statusMatch ? parseInt(statusMatch[1]) : 500
+      
+      console.error(`[API] Non-2xx status code error:`, {
+        endpoint,
+        statusCode,
+        error: error.message,
+        details: error
+      })
+
+      throw new APIError(
+        `서버 오류가 발생했습니다 (${statusCode}). ${error.message || 'Edge Function이 실패했습니다.'}`,
+        statusCode,
+        error
+      )
     }
 
     // JSON 파싱 오류 처리
