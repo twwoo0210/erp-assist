@@ -1,5 +1,5 @@
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../utils/supabase'
@@ -21,7 +21,7 @@ interface ParsedOrder {
 }
 
 export default function AIOrderEntryPage() {
-  const { user, ecountConnection, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
   const navigate = useNavigate()
   
   const [inputText, setInputText] = useState('')
@@ -32,6 +32,42 @@ export default function AIOrderEntryPage() {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [ecountConnection, setEcountConnection] = useState<any | null>(null)
+  const [checkingConnection, setCheckingConnection] = useState(true)
+
+  // Ecount 연결 상태 확인
+  useEffect(() => {
+    const checkEcountConnection = async () => {
+      if (!user || !profile?.org_id || !supabase) {
+        setCheckingConnection(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('ecount_connections')
+          .select('*')
+          .eq('org_id', profile.org_id)
+          .eq('connection_name', 'primary')
+          .single()
+
+        if (!error && data) {
+          setEcountConnection(data)
+        } else {
+          setEcountConnection(null)
+        }
+      } catch (err) {
+        console.error('Ecount 연결 확인 실패:', err)
+        setEcountConnection(null)
+      } finally {
+        setCheckingConnection(false)
+      }
+    }
+
+    if (!loading && user) {
+      checkEcountConnection()
+    }
+  }, [user, profile?.org_id, loading])
 
   // 로그인하지 않은 경우 리다이렉트
   if (!loading && !user) {
@@ -40,7 +76,7 @@ export default function AIOrderEntryPage() {
   }
 
   // Ecount 연결이 안된 경우 안내
-  if (!loading && ecountConnection?.status !== 'connected') {
+  if (!loading && !checkingConnection && ecountConnection?.status !== 'connected') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 text-center">
@@ -48,13 +84,17 @@ export default function AIOrderEntryPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Ecount 연결 필요</h2>
           <p className="text-gray-600 mb-4">
             AI 주문 입력을 사용하려면 먼저 Ecount 시스템과 연결해야 합니다.
+            <br />
+            <span className="text-sm text-gray-500 mt-2 block">
+              설정 페이지에서 Ecount 연결을 완료해주세요.
+            </span>
           </p>
           <button
             onClick={() => navigate('/settings/ecount')}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
           >
             <i className="ri-settings-line mr-2"></i>
-            Ecount 연결 설정
+            Ecount 연결 설정으로 이동
           </button>
         </div>
       </div>
@@ -70,18 +110,56 @@ export default function AIOrderEntryPage() {
     setOrderItems([])
 
     try {
+      console.log('Calling API with input:', inputText.trim())
       const data = await api.parseOrder(inputText.trim())
       
       console.log('Parsed order data:', data)
+      console.log('Data structure:', {
+        customer: data?.customer,
+        itemsCount: data?.items?.length,
+        items: data?.items
+      })
       
-      if (!data || !data.customer || !data.items || data.items.length === 0) {
-        throw new Error('AI가 주문을 분석하지 못했습니다. 입력 내용을 확인해주세요.')
+      if (!data) {
+        throw new Error('AI 응답이 비어있습니다.')
       }
+
+      if (!data.customer) {
+        console.warn('Customer is missing, setting to "미지정"')
+        data.customer = '미지정'
+      }
+
+      if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
+        throw new Error('AI가 주문 품목을 분석하지 못했습니다. 입력 내용을 확인해주세요.')
+      }
+
+      // 품목 데이터 검증 및 정리
+      const validatedItems = data.items.map((item: any, index: number) => {
+        console.log(`Item ${index}:`, item)
+        return {
+          code: item.code || '',
+          name: item.name || `품목 ${index + 1}`,
+          quantity: Number(item.quantity) || 0,
+          price: Number(item.price) || 0,
+          unit: item.unit || '개',
+          note: item.note
+        }
+      })
+
+      console.log('Validated items:', validatedItems)
       
-      setParsedOrder(data)
-      setOrderItems(data.items || [])
+      setParsedOrder({
+        customer: data.customer,
+        items: validatedItems
+      })
+      setOrderItems(validatedItems)
     } catch (err: any) {
       console.error('Parse order error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        details: err.details
+      })
       setError(err.message || 'AI 주문 분석 중 오류가 발생했습니다.')
     } finally {
       setProcessing(false)
@@ -167,7 +245,7 @@ export default function AIOrderEntryPage() {
     }
   }
 
-  if (loading) {
+  if (loading || checkingConnection) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
